@@ -1,0 +1,85 @@
+16:14:23.572 Running build in Washington, D.C., USA (East) – iad1
+16:14:23.573 Build machine configuration: 2 cores, 8 GB
+16:14:23.695 Cloning github.com/Dozzlime06/megabridge-app (Branch: main, Commit: b1c065b)
+16:14:23.696 Previous build caches not available.
+16:14:24.859 Cloning completed: 1.164s
+16:14:25.241 Running "vercel build"
+16:14:25.653 Vercel CLI 49.1.2
+16:14:26.220 Running "install" command: `npm install`...
+16:15:41.527 npm warn deprecated @paulmillr/qr@0.2.1: The package is now available as "qr": npm install qr
+16:15:41.619 npm warn deprecated @esbuild-kit/core-utils@3.3.2: Merged into tsx: https://tsx.is
+16:15:41.620 npm warn deprecated @esbuild-kit/esm-loader@2.6.5: Merged into tsx: https://tsx.is
+16:15:51.660 npm warn deprecated @walletconnect/sign-client@2.21.0: Reliability and performance improvements. See: https://github.com/WalletConnect/walletconnect-monorepo/releases
+16:15:51.688 npm warn deprecated @walletconnect/sign-client@2.21.0: Reliability and performance improvements. See: https://github.com/WalletConnect/walletconnect-monorepo/releases
+16:15:51.695 npm warn deprecated @walletconnect/sign-client@2.21.1: Reliability and performance improvements. See: https://github.com/WalletConnect/walletconnect-monorepo/releases
+16:15:51.724 npm warn deprecated @walletconnect/sign-client@2.21.0: Reliability and performance improvements. See: https://github.com/WalletConnect/walletconnect-monorepo/releases
+16:15:52.062 npm warn deprecated @walletconnect/universal-provider@2.21.0: Reliability and performance improvements. See: https://github.com/WalletConnect/walletconnect-monorepo/releases
+16:15:52.071 npm warn deprecated @walletconnect/universal-provider@2.21.0: Reliability and performance improvements. See: https://github.com/WalletConnect/walletconnect-monorepo/releases
+16:15:52.084 npm warn deprecated @walletconnect/universal-provider@2.21.0: Reliability and performance improvements. See: https://github.com/WalletConnect/walletconnect-monorepo/releases
+16:15:52.087 npm warn deprecated @walletconnect/universal-provider@2.21.1: Reliability and performance improvements. See: https://github.com/WalletConnect/walletconnect-monorepo/releases
+16:15:52.257 npm warn deprecated @walletconnect/ethereum-provider@2.21.1: Reliability and performance improvements. See: https://github.com/WalletConnect/walletconnect-monorepo/releases
+16:16:18.948 
+16:16:18.949 added 1093 packages, and audited 1094 packages in 2m
+16:16:18.949 
+16:16:18.950 131 packages are looking for funding
+16:16:18.950   run `npm fund` for details
+16:16:18.968 
+16:16:18.968 4 moderate severity vulnerabilities
+16:16:18.969 
+16:16:18.969 To address all issues (including breaking changes), run:
+16:16:18.969   npm audit fix --force
+16:16:18.969 
+16:16:18.969 Run `npm audit` for details.
+16:16:21.149 [36mvite v7.2.7 [32mbuilding client environment for production...[36m[39m
+16:16:21.390 transforming...
+16:16:22.227 [33mnode_modules/@privy-io/react-auth/dist/esm/prepareFundingModalData-CndHQFiM.mjs (1:5184): A comment
+16:16:22.228 
+16:16:22.228 "/*#__PURE__*/"
+16:16:22.229 
+16:16:22.229 in "node_modules/@privy-io/react-auth/dist/esm/prepareFundingModalData-CndHQFiM.mjs" contains an annotation that Rollup cannot interpret due to the position of the comment. The comment will be removed to avoid issues.[39m
+16:16:22.231 [33mnode_modules/@privy-io/react-auth/dist/esm/usePrivy-BSIhOAz8.mjs (1:885): A comment
+16:16:22.232 
+16:16:22.232 "/*#__PURE__*/"
+16:16:22.232 
+16:16:22.232 in "node_modules/@privy-io/react-auth/dist/esm/usePrivy-BSIhOAz8.mjs" contains an annotation that Rollup cannot interpret due to the position of the comment. The comment will be removed to avoid issues.[39m
+16:16:22.277 [33mnode_modules/@privy-io/react-auth/dist/esm/get-is-unified-wallet-DXko-EzF.mjs (1:8185): A comment
+16:16:22.277 
+16:16:22.277 "/*#__PURE__*/"
+16:16:22.277 
+16:16:22.277 in "node_modules/@privy-io/react-auth/dist/esm/get-is-unified-wallet-DXko-EzF.mjs" contains an annotation that Rollup cannot interpret due to the position of the comment. The comment will be removed to avoid issues.[39m
+16:16:22.278 [33mnode_modules/@privy-io/react-auth/dist/esm/get-is-unified-wallet-DXko-EzF.mjs (1:8837): A comment
+16:16:22.278 
+16:16:22.278 "/*#__PURE__*/"
+16:16:22.278 
+16:16:22.278 in "node_modules/@privy-io/react-auth/dist/esm/get-is-unified-wallet-DXko-EzF.mjs" contains an annotation that Rollup cannot interpret due to the position of the comment. The comment will be removed to avoid issues.[39m
+16:16:22.467 [33mnode_modules/@privy-io/react-auth/dist/esm/index-CCrVHfyv.mjs (1:36424): A comment
+16:16:22.468 
+16:16:22.468 "/*#__PURE__*/"
+16:16:22.468 
+16:16:22.468 in "node_modules/@privy-io/react-auth/dist/esm/index-CCrVHfyv.mjs" contains an annotation that Rollup cannot interpret due to the position of the comment. The comment will be removed to avoid issues.[39m
+16:16:22.468 [33mnode_modules/@privy-io/react-auth/dist/esm/index-CCrVHfyv.mjs (3:255): A comment
+16:16:22.469 
+16:16:22.469 "/*#__PURE__*/"
+16:16:22.469 
+16:16:22.469 in "node_modules/@privy-io/react-auth/dist/esm/index-CCrVHfyv.mjs" contains an annotation that Rollup cannot interpret due to the position of the comment. The comment will be removed to avoid issues.[39m
+16:16:22.470 [33mnode_modules/@privy-io/react-auth/dist/esm/index-CCrVHfyv.mjs (4:81648): A comment
+16:16:22.471 
+16:16:22.471 "/*#__PURE__*/"
+16:16:22.471 
+16:16:22.471 in "node_modules/@privy-io/react-auth/dist/esm/index-CCrVHfyv.mjs" contains an annotation that Rollup cannot interpret due to the position of the comment. The comment will be removed to avoid issues.[39m
+16:16:22.506 [33mnode_modules/@privy-io/react-auth/dist/esm/index-CCrVHfyv.mjs (5:35128): A comment
+16:16:22.511 
+16:16:22.511 "/*#__PURE__*/"
+16:16:22.511 
+16:16:22.511 in "node_modules/@privy-io/react-auth/dist/esm/index-CCrVHfyv.mjs" contains an annotation that Rollup cannot interpret due to the position of the comment. The comment will be removed to avoid issues.[39m
+16:16:22.596 [32m✓[39m 708 modules transformed.
+16:16:22.597 [31m✗[39m Build failed in 1.41s
+16:16:22.597 [31merror during build:
+16:16:22.598 [31m[vite:css] [postcss] It looks like you're trying to use `tailwindcss` directly as a PostCSS plugin. The PostCSS plugin has moved to a separate package, so to continue using Tailwind CSS with PostCSS you'll need to install `@tailwindcss/postcss` and update your PostCSS configuration.[31m
+16:16:22.598 file: [36m/vercel/path0/client/src/index.css:undefined:NaN[31m
+16:16:22.598     at at (/vercel/path0/node_modules/tailwindcss/dist/lib.js:38:1629)
+16:16:22.598     at LazyResult.runOnRoot (/vercel/path0/node_modules/postcss/lib/lazy-result.js:361:16)
+16:16:22.598     at LazyResult.runAsync (/vercel/path0/node_modules/postcss/lib/lazy-result.js:290:26)
+16:16:22.598     at LazyResult.async (/vercel/path0/node_modules/postcss/lib/lazy-result.js:192:30)
+16:16:22.598     at LazyResult.then (/vercel/path0/node_modules/postcss/lib/lazy-result.js:436:17)[39m
+16:16:22.640 Error: Command "npx vite build --config vite.config.vercel.ts" exited with 1
