@@ -10,7 +10,7 @@ const IGNORE_PATTERNS = [
   '.git',
   '.replit',
   'replit.nix',
-  '.config',
+  '/.config',
   '.cache',
   'dist',
   '.upm',
