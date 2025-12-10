@@ -1,0 +1,49 @@
+15:40:28.932 Running build in Washington, D.C., USA (East) – iad1
+15:40:28.933 Build machine configuration: 2 cores, 8 GB
+15:40:29.078 Cloning github.com/Dozzlime06/megabridge (Branch: main, Commit: 478827a)
+15:40:29.079 Previous build caches not available.
+15:40:31.255 Cloning completed: 2.177s
+15:40:31.605 Running "vercel build"
+15:40:32.013 Vercel CLI 49.1.2
+15:40:32.588 Running "install" command: `npm install`...
+15:41:44.793 npm warn deprecated @paulmillr/qr@0.2.1: The package is now available as "qr": npm install qr
+15:41:45.135 npm warn deprecated @esbuild-kit/esm-loader@2.6.5: Merged into tsx: https://tsx.is
+15:41:45.155 npm warn deprecated @esbuild-kit/core-utils@3.3.2: Merged into tsx: https://tsx.is
+15:41:55.313 npm warn deprecated @walletconnect/sign-client@2.21.0: Reliability and performance improvements. See: https://github.com/WalletConnect/walletconnect-monorepo/releases
+15:41:55.314 npm warn deprecated @walletconnect/sign-client@2.21.0: Reliability and performance improvements. See: https://github.com/WalletConnect/walletconnect-monorepo/releases
+15:41:55.321 npm warn deprecated @walletconnect/sign-client@2.21.0: Reliability and performance improvements. See: https://github.com/WalletConnect/walletconnect-monorepo/releases
+15:41:55.373 npm warn deprecated @walletconnect/sign-client@2.21.1: Reliability and performance improvements. See: https://github.com/WalletConnect/walletconnect-monorepo/releases
+15:41:55.684 npm warn deprecated @walletconnect/universal-provider@2.21.0: Reliability and performance improvements. See: https://github.com/WalletConnect/walletconnect-monorepo/releases
+15:41:55.714 npm warn deprecated @walletconnect/universal-provider@2.21.0: Reliability and performance improvements. See: https://github.com/WalletConnect/walletconnect-monorepo/releases
+15:41:55.762 npm warn deprecated @walletconnect/universal-provider@2.21.1: Reliability and performance improvements. See: https://github.com/WalletConnect/walletconnect-monorepo/releases
+15:41:55.781 npm warn deprecated @walletconnect/universal-provider@2.21.0: Reliability and performance improvements. See: https://github.com/WalletConnect/walletconnect-monorepo/releases
+15:41:55.935 npm warn deprecated @walletconnect/ethereum-provider@2.21.1: Reliability and performance improvements. See: https://github.com/WalletConnect/walletconnect-monorepo/releases
+15:42:22.310 
+15:42:22.311 added 1093 packages, and audited 1094 packages in 2m
+15:42:22.312 
+15:42:22.312 131 packages are looking for funding
+15:42:22.313   run `npm fund` for details
+15:42:22.338 
+15:42:22.339 4 moderate severity vulnerabilities
+15:42:22.339 
+15:42:22.339 To address all issues (including breaking changes), run:
+15:42:22.340   npm audit fix --force
+15:42:22.340 
+15:42:22.340 Run `npm audit` for details.
+15:42:24.690 ✘ [ERROR] Could not resolve "/vercel/path0/vite.config.vercel.ts"
+15:42:24.690 
+15:42:24.693 [31mfailed to load config from /vercel/path0/vite.config.vercel.ts[39m
+15:42:24.693 [31merror during build:
+15:42:24.693 Error: Build failed with 1 error:
+15:42:24.693 error: Could not resolve "/vercel/path0/vite.config.vercel.ts"
+15:42:24.693     at failureErrorWithLog (/vercel/path0/node_modules/esbuild/lib/main.js:1467:15)
+15:42:24.693     at /vercel/path0/node_modules/esbuild/lib/main.js:926:25
+15:42:24.694     at runOnEndCallbacks (/vercel/path0/node_modules/esbuild/lib/main.js:1307:45)
+15:42:24.694     at buildResponseToResult (/vercel/path0/node_modules/esbuild/lib/main.js:924:7)
+15:42:24.694     at /vercel/path0/node_modules/esbuild/lib/main.js:951:16
+15:42:24.694     at responseCallbacks.<computed> (/vercel/path0/node_modules/esbuild/lib/main.js:603:9)
+15:42:24.694     at handleIncomingPacket (/vercel/path0/node_modules/esbuild/lib/main.js:658:12)
+15:42:24.694     at Socket.readFromStdout (/vercel/path0/node_modules/esbuild/lib/main.js:581:7)
+15:42:24.694     at Socket.emit (node:events:508:28)
+15:42:24.694     at addChunk (node:internal/streams/readable:559:12)[39m
+15:42:24.719 Error: Command "npx vite build --config vite.config.vercel.ts" exited with 1
