@@ -1,6 +1,6 @@
 import { createRoot } from "react-dom/client";
 import { PrivyProvider } from "@privy-io/react-auth";
-import { base } from "viem/chains";
+import { base, mainnet, arbitrum, optimism, polygon, bsc, avalanche, fantom, cronos, zkSync, linea, scroll, blast, mantle, gnosis, polygonZkEvm, zora, mode, manta } from "viem/chains";
 import App from "./App";
 import "./index.css";
 
@@ -13,6 +13,18 @@ const megaethChain = {
   },
   blockExplorers: {
     default: { name: "MEGA Explorer", url: "https://mega-explorer-leaked.poptyedev.com/" },
+  },
+};
+
+const hyperEvmChain = {
+  id: 999,
+  name: "HyperEVM",
+  nativeCurrency: { name: "HYPE", symbol: "HYPE", decimals: 18 },
+  rpcUrls: {
+    default: { http: ["https://rpc.hyperliquid.xyz/evm"] },
+  },
+  blockExplorers: {
+    default: { name: "Purrsec", url: "https://purrsec.com" },
   },
 };
 
@@ -38,15 +50,34 @@ createRoot(document.getElementById("root")!).render(
       },
       loginMethods: ["wallet"],
       embeddedWallets: {
-        createOnLogin: "off",
-      },
-      externalWallets: {
-        coinbaseWallet: {
-          connectionOptions: "all",
+        ethereum: {
+          createOnLogin: "off",
         },
       },
       defaultChain: base,
-      supportedChains: [base, megaethChain],
+      supportedChains: [
+        base,
+        mainnet,
+        arbitrum,
+        optimism,
+        polygon,
+        bsc,
+        avalanche,
+        fantom,
+        cronos,
+        zkSync,
+        linea,
+        scroll,
+        blast,
+        mantle,
+        gnosis,
+        polygonZkEvm,
+        zora,
+        mode,
+        manta,
+        hyperEvmChain,
+        megaethChain,
+      ],
     }}
   >
     <App />

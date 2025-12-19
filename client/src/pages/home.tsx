@@ -1,15 +1,15 @@
 import { useState, useEffect } from "react";
 import { motion } from "framer-motion";
-import { ArrowRightLeft, Wallet, ExternalLink, Activity, Zap, Clock, Copy, Check } from "lucide-react";
+import { ArrowRightLeft, Wallet, ExternalLink, Activity, Zap, Clock, Copy, Check, ChevronDown, X } from "lucide-react";
 import bgImage from "@assets/generated_images/abstract_dark_cyberpunk_network_background_with_neon_green_and_purple_data_streams.png";
 import logoImage from "@assets/generated_images/megabridge_crypto_logo_icon.png";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Card } from "@/components/ui/card";
 import { Separator } from "@/components/ui/separator";
-import { BaseLogo, MegaETHLogoSimple } from "@/components/chain-logos";
+import { ChainLogo, MegaETHLogoSimple } from "@/components/chain-logos";
 import { usePrivy, useWallets } from "@privy-io/react-auth";
-import { BRIDGE_CONTRACT_ADDRESS, BRIDGE_OUT_ADDRESS, MAX_DEPOSIT } from "@/lib/contract";
+import { BRIDGE_OUT_ADDRESS, MAX_DEPOSIT, SUPPORTED_CHAINS, MEGAETH_CONFIG, ChainConfig } from "@/lib/contract";
 import { useToast } from "@/hooks/use-toast";
 
 interface Quote {
@@ -28,10 +28,13 @@ export default function Home() {
   const [bridgeSuccess, setBridgeSuccess] = useState(false);
   const [txHash, setTxHash] = useState<string | null>(null);
   const [quote, setQuote] = useState<Quote | null>(null);
-  const [baseBalance, setBaseBalance] = useState("0");
+  const [sourceBalance, setSourceBalance] = useState("0");
   const [megaBalance, setMegaBalance] = useState("0");
   const [isBridgeIn, setIsBridgeIn] = useState(true);
   const [copied, setCopied] = useState(false);
+  const [selectedChain, setSelectedChain] = useState<ChainConfig>(SUPPORTED_CHAINS[0]);
+  const [showChainSelector, setShowChainSelector] = useState(false);
+  const [showAllChains, setShowAllChains] = useState(false);
   
   const { login, logout, authenticated, ready } = usePrivy();
   const { wallets } = useWallets();
@@ -39,48 +42,48 @@ export default function Home() {
   const { toast } = useToast();
 
   useEffect(() => {
-    const switchToBase = async () => {
-      if (!activeWallet) return;
+    const switchToChain = async () => {
+      if (!activeWallet || !isBridgeIn) return;
       try {
         const provider = await activeWallet.getEthereumProvider();
         const chainId = await provider.request({ method: "eth_chainId" });
-        if (parseInt(chainId as string, 16) !== 8453) {
+        if (parseInt(chainId as string, 16) !== selectedChain.id) {
           try {
             await provider.request({
               method: "wallet_switchEthereumChain",
-              params: [{ chainId: "0x2105" }],
+              params: [{ chainId: selectedChain.hexChainId }],
             });
           } catch (switchError: any) {
             if (switchError.code === 4902) {
               await provider.request({
                 method: "wallet_addEthereumChain",
                 params: [{
-                  chainId: "0x2105",
-                  chainName: "Base",
-                  nativeCurrency: { name: "Ethereum", symbol: "ETH", decimals: 18 },
-                  rpcUrls: ["https://mainnet.base.org"],
-                  blockExplorerUrls: ["https://basescan.org"],
+                  chainId: selectedChain.hexChainId,
+                  chainName: selectedChain.name,
+                  nativeCurrency: { name: selectedChain.symbol, symbol: selectedChain.symbol, decimals: 18 },
+                  rpcUrls: [selectedChain.rpcUrl],
+                  blockExplorerUrls: [selectedChain.explorerUrl],
                 }],
               });
             }
           }
         }
       } catch (err) {
-        console.error("Failed to switch to Base:", err);
+        console.error("Failed to switch chain:", err);
       }
     };
     
     if (authenticated && activeWallet) {
-      switchToBase();
+      switchToChain();
     }
-  }, [authenticated, activeWallet]);
+  }, [authenticated, activeWallet, selectedChain, isBridgeIn]);
 
   useEffect(() => {
     const fetchBalances = async () => {
       if (!activeWallet?.address) return;
 
       try {
-        const baseRes = await fetch(`https://mainnet.base.org`, {
+        const sourceRes = await fetch(selectedChain.rpcUrl, {
           method: "POST",
           headers: { "Content-Type": "application/json" },
           body: JSON.stringify({
@@ -90,16 +93,16 @@ export default function Home() {
             id: 1,
           }),
         });
-        const baseData = await baseRes.json();
-        if (baseData.result) {
-          setBaseBalance((parseInt(baseData.result, 16) / 1e18).toFixed(4));
+        const sourceData = await sourceRes.json();
+        if (sourceData.result) {
+          setSourceBalance((parseInt(sourceData.result, 16) / 1e18).toFixed(4));
         }
       } catch (err) {
-        console.error("Failed to fetch Base balance:", err);
+        console.error("Failed to fetch source balance:", err);
       }
 
       try {
-        const megaRes = await fetch(`https://rpc-secret-mega.poptyedev.com/`, {
+        const megaRes = await fetch(MEGAETH_CONFIG.rpcUrl, {
           method: "POST",
           headers: { "Content-Type": "application/json" },
           body: JSON.stringify({
@@ -123,7 +126,7 @@ export default function Home() {
       const interval = setInterval(fetchBalances, 15000);
       return () => clearInterval(interval);
     }
-  }, [authenticated, activeWallet?.address]);
+  }, [authenticated, activeWallet?.address, selectedChain]);
 
   useEffect(() => {
     if (!amount || parseFloat(amount) <= 0) {
@@ -133,7 +136,7 @@ export default function Home() {
 
     const fetchQuote = async () => {
       try {
-        const res = await fetch(`/api/quote?amount=${amount}`);
+        const res = await fetch(`/api/quote?amount=${amount}&chainId=${selectedChain.id}`);
         if (res.ok) {
           const data = await res.json();
           setQuote(data);
@@ -145,7 +148,7 @@ export default function Home() {
 
     const debounce = setTimeout(fetchQuote, 300);
     return () => clearTimeout(debounce);
-  }, [amount]);
+  }, [amount, selectedChain.id]);
 
   const handleBridge = async () => {
     if (!amount || !authenticated || !activeWallet) return;
@@ -177,22 +180,22 @@ export default function Home() {
       
       if (isBridgeIn) {
         const chainId = await provider.request({ method: "eth_chainId" });
-        if (parseInt(chainId as string, 16) !== 8453) {
+        if (parseInt(chainId as string, 16) !== selectedChain.id) {
           try {
             await provider.request({
               method: "wallet_switchEthereumChain",
-              params: [{ chainId: "0x2105" }],
+              params: [{ chainId: selectedChain.hexChainId }],
             });
           } catch (switchError: any) {
             if (switchError.code === 4902) {
               await provider.request({
                 method: "wallet_addEthereumChain",
                 params: [{
-                  chainId: "0x2105",
-                  chainName: "Base",
-                  nativeCurrency: { name: "Ethereum", symbol: "ETH", decimals: 18 },
-                  rpcUrls: ["https://mainnet.base.org"],
-                  blockExplorerUrls: ["https://basescan.org"],
+                  chainId: selectedChain.hexChainId,
+                  chainName: selectedChain.name,
+                  nativeCurrency: { name: selectedChain.symbol, symbol: selectedChain.symbol, decimals: 18 },
+                  rpcUrls: [selectedChain.rpcUrl],
+                  blockExplorerUrls: [selectedChain.explorerUrl],
                 }],
               });
             }
@@ -205,7 +208,7 @@ export default function Home() {
           method: "eth_sendTransaction",
           params: [{
             from: activeWallet.address,
-            to: BRIDGE_CONTRACT_ADDRESS,
+            to: selectedChain.bridgeContract,
             value: amountWei,
           }],
         });
@@ -298,7 +301,7 @@ export default function Home() {
   };
 
   const copyContract = () => {
-    navigator.clipboard.writeText(BRIDGE_CONTRACT_ADDRESS);
+    navigator.clipboard.writeText(selectedChain.bridgeContract);
     setCopied(true);
     toast({
       title: "Copied!",
@@ -385,12 +388,12 @@ export default function Home() {
 
           {authenticated && activeWallet && (
             <div className="mb-4 grid grid-cols-2 gap-3">
-              <div className="bg-blue-500/10 border border-blue-500/20 rounded-lg p-3">
+              <div className="rounded-lg p-3" style={{ backgroundColor: `${selectedChain.logoColor}15`, borderColor: `${selectedChain.logoColor}30`, borderWidth: 1 }}>
                 <div className="flex items-center gap-2 mb-1">
-                  <BaseLogo className="w-4 h-4" />
-                  <span className="text-xs font-tech text-blue-400 uppercase">Base</span>
+                  <ChainLogo chainId={selectedChain.id} className="w-4 h-4" />
+                  <span className="text-xs font-tech uppercase" style={{ color: selectedChain.logoColor }}>{selectedChain.name}</span>
                 </div>
-                <div className="text-lg font-bold text-white" data-testid="text-base-balance">{baseBalance} ETH</div>
+                <div className="text-lg font-bold text-white" data-testid="text-source-balance">{sourceBalance} {selectedChain.symbol}</div>
               </div>
               <div className="bg-primary/10 border border-primary/20 rounded-lg p-3">
                 <div className="flex items-center gap-2 mb-1">
@@ -421,14 +424,26 @@ export default function Home() {
                   <div className="flex justify-between items-center mb-2">
                     <span className="text-xs font-tech text-muted-foreground uppercase tracking-wider">From Network</span>
                     <span className="text-xs font-tech text-muted-foreground">
-                      Balance: {isBridgeIn ? baseBalance : megaBalance} ETH
+                      Balance: {isBridgeIn ? sourceBalance : megaBalance} {selectedChain.symbol}
                     </span>
                   </div>
                   <div className="flex items-center justify-between">
-                    <div className={`flex items-center gap-2 bg-black/50 px-3 py-2 rounded border border-white/5 ${!isBridgeIn ? 'shadow-[0_0_10px_-5px_hsl(var(--mega-green))]' : ''}`}>
-                      {isBridgeIn ? <BaseLogo className="w-6 h-6" /> : <MegaETHLogoSimple className="w-6 h-6" />}
-                      <span className="font-medium text-sm text-white">{isBridgeIn ? 'Base' : 'MegaETH'}</span>
-                    </div>
+                    {isBridgeIn ? (
+                      <button
+                        onClick={() => setShowChainSelector(true)}
+                        className="flex items-center gap-2 bg-black/50 px-3 py-2 rounded border border-white/10 hover:border-white/20 transition-colors cursor-pointer"
+                        data-testid="button-chain-selector"
+                      >
+                        <ChainLogo chainId={selectedChain.id} className="w-6 h-6" />
+                        <span className="font-medium text-sm text-white">{selectedChain.name}</span>
+                        <ChevronDown className="w-4 h-4 text-muted-foreground" />
+                      </button>
+                    ) : (
+                      <div className="flex items-center gap-2 bg-black/50 px-3 py-2 rounded border border-white/5 shadow-[0_0_10px_-5px_hsl(var(--mega-green))]">
+                        <MegaETHLogoSimple className="w-6 h-6" />
+                        <span className="font-medium text-sm text-white">MegaETH</span>
+                      </div>
+                    )}
                     <div className="flex-1 text-right">
                       <Input 
                         type="number" 
@@ -457,13 +472,13 @@ export default function Home() {
                   <div className="flex justify-between items-center mb-2">
                     <span className="text-xs font-tech text-muted-foreground uppercase tracking-wider">To Network</span>
                     <span className="text-xs font-tech text-muted-foreground">
-                      Balance: {isBridgeIn ? megaBalance : baseBalance} ETH
+                      Balance: {isBridgeIn ? megaBalance : sourceBalance} {isBridgeIn ? 'ETH' : selectedChain.symbol}
                     </span>
                   </div>
                   <div className="flex items-center justify-between">
                     <div className={`flex items-center gap-2 bg-black/50 px-3 py-2 rounded border border-white/5 ${isBridgeIn ? 'shadow-[0_0_10px_-5px_hsl(var(--mega-green))]' : ''}`}>
-                      {isBridgeIn ? <MegaETHLogoSimple className="w-6 h-6" /> : <BaseLogo className="w-6 h-6" />}
-                      <span className="font-medium text-sm text-white">{isBridgeIn ? 'MegaETH' : 'Base'}</span>
+                      {isBridgeIn ? <MegaETHLogoSimple className="w-6 h-6" /> : <ChainLogo chainId={selectedChain.id} className="w-6 h-6" />}
+                      <span className="font-medium text-sm text-white">{isBridgeIn ? 'MegaETH' : selectedChain.name}</span>
                     </div>
                     <div className="flex-1 text-right">
                        <span className="text-2xl font-tech font-bold text-white/50">
@@ -476,13 +491,19 @@ export default function Home() {
 
               {quote && parseFloat(amount) > 0 && (
                 <div className="bg-white/5 rounded p-3 text-xs font-tech text-muted-foreground space-y-1">
+                  {quote.inputToken !== 'ETH' && (
+                    <div className="flex justify-between text-primary/80 pb-1 mb-1 border-b border-white/5">
+                      <span>Conversion ({quote.inputToken} → ETH)</span>
+                      <span>~${quote.inputUsdValue}</span>
+                    </div>
+                  )}
                   <div className="flex justify-between">
                     <span>Slippage ({(quote.slippageBps / 100).toFixed(2)}%)</span>
-                    <span>-{quote.slippageAmount} ETH</span>
+                    <span>-{quote.slippageAmount} {quote.outputToken}</span>
                   </div>
                   <div className="flex justify-between">
                     <span>Bridge Fee ({quote.feePercent}%)</span>
-                    <span>-{quote.feeAmount} ETH</span>
+                    <span>-{quote.feeAmount} {quote.outputToken}</span>
                   </div>
                   <div className="flex justify-between items-center text-yellow-500/80 mt-2 pt-2 border-t border-white/5">
                     <span className="flex items-center gap-1">
@@ -544,19 +565,19 @@ export default function Home() {
                  </motion.div>
               )}
 
-              {isBridgeIn && (
+              {isBridgeIn && selectedChain.id === 8453 && (
                 <div className="bg-white/5 rounded p-3 text-xs">
                   <div className="flex items-center justify-between">
-                    <span className="text-muted-foreground font-tech">Or send ETH directly to:</span>
+                    <span className="text-muted-foreground font-tech">Or send ETH directly to contract:</span>
                     <button onClick={copyContract} className="flex items-center gap-1 text-primary hover:underline cursor-pointer" data-testid="button-copy-contract">
                       {copied ? <Check className="w-3 h-3" /> : <Copy className="w-3 h-3" />}
                       {copied ? "Copied!" : "Copy"}
                     </button>
                   </div>
-                  <div className="mt-1 text-white font-mono text-[10px] break-all">{BRIDGE_CONTRACT_ADDRESS}</div>
+                  <div className="mt-1 text-white font-mono text-[10px] break-all">{selectedChain.bridgeContract}</div>
                   <div className="mt-2 flex items-center gap-2 text-yellow-500/80 bg-yellow-500/10 rounded px-2 py-1.5">
-                    <BaseLogo className="w-4 h-4 flex-shrink-0" />
-                    <span className="font-tech">BASE MAINNET ONLY - Do not send from Ethereum mainnet!</span>
+                    <ChainLogo chainId={selectedChain.id} className="w-4 h-4 flex-shrink-0" />
+                    <span className="font-tech">{selectedChain.name.toUpperCase()} ONLY - Verified contract</span>
                   </div>
                 </div>
               )}
@@ -576,16 +597,67 @@ export default function Home() {
           </Card>
 
           <div className="mt-8 flex justify-center gap-6">
-            <a href="https://x.com/megabridgex" target="_blank" className="text-muted-foreground hover:text-primary transition-colors" data-testid="link-twitter">
+            <a href="#" target="_blank" className="text-muted-foreground hover:text-primary transition-colors" data-testid="link-twitter">
               <svg className="w-5 h-5" fill="currentColor" viewBox="0 0 24 24"><path d="M18.244 2.25h3.308l-7.227 8.26 8.502 11.24H16.17l-5.214-6.817L4.99 21.75H1.68l7.73-8.835L1.254 2.25H8.08l4.713 6.231zm-1.161 17.52h1.833L7.084 4.126H5.117z"/></svg>
             </a>
-            <a href="https://megabridge.gitbook.io/docs/" target="_blank" className="text-muted-foreground hover:text-primary transition-colors" data-testid="link-gitbook">
+            <a href="#" target="_blank" className="text-muted-foreground hover:text-primary transition-colors" data-testid="link-gitbook">
               <svg className="w-5 h-5" fill="currentColor" viewBox="0 0 24 24"><path d="M10.802 17.77a.703.703 0 1 1-.002 1.406.703.703 0 0 1 .002-1.406zm11.024-4.347a.703.703 0 1 1 .001-1.406.703.703 0 0 1-.001 1.406zm0-2.876a2.176 2.176 0 0 0-2.174 2.174c0 .233.039.465.115.691l-7.181 3.823a2.165 2.165 0 0 0-1.784-.937c-.829 0-1.584.475-1.95 1.216l-6.451-3.402c-.682-.358-1.192-1.48-1.138-2.502.028-.533.212-.947.493-1.107.178-.1.392-.092.62.027l.042.023c1.71.9 7.304 3.847 7.54 3.956.363.168.565.237 1.185-.057l11.564-6.014c.17-.064.368-.227.368-.474 0-.342-.354-.477-.355-.477-.658-.315-1.669-.788-2.655-1.25-2.108-.987-4.497-2.105-5.546-2.655-.906-.474-1.635-.074-1.765.006l-.252.125C7.78 6.048 1.46 9.178 1.1 9.397.457 9.789.058 10.57.006 11.539c-.08 1.537.703 3.14 1.824 3.727l6.822 3.518a2.175 2.175 0 0 0 2.15 1.862 2.177 2.177 0 0 0 2.173-2.14l7.514-4.073c.38.298.853.461 1.337.461A2.176 2.176 0 0 0 24 12.72a2.176 2.176 0 0 0-2.174-2.174z"/></svg>
             </a>
           </div>
 
         </motion.div>
       </main>
+
+      {showChainSelector && (
+        <motion.div 
+          initial={{ opacity: 0 }}
+          animate={{ opacity: 1 }}
+          exit={{ opacity: 0 }}
+          className="fixed inset-0 z-50 bg-black/95 backdrop-blur-xl flex flex-col"
+        >
+          <div className="flex items-center justify-between p-4 border-b border-white/10">
+            <h2 className="text-xl font-display text-white">Select Network</h2>
+            <button 
+              onClick={() => setShowChainSelector(false)}
+              className="p-2 hover:bg-white/10 rounded-full transition-colors cursor-pointer"
+              data-testid="button-close-chain-modal"
+            >
+              <X className="w-6 h-6 text-white" />
+            </button>
+          </div>
+          <div className="flex-1 overflow-y-auto p-4">
+            <div className="grid grid-cols-3 gap-2 max-w-md mx-auto">
+              {(showAllChains ? SUPPORTED_CHAINS : SUPPORTED_CHAINS.slice(0, 8)).map((chain) => (
+                <button
+                  key={chain.id}
+                  onClick={() => { setSelectedChain(chain); setShowChainSelector(false); setShowAllChains(false); }}
+                  className={`flex flex-col items-center gap-1.5 p-3 rounded-lg border transition-all cursor-pointer ${
+                    selectedChain.id === chain.id 
+                      ? 'bg-primary/20 border-primary shadow-[0_0_15px_-5px_hsl(var(--mega-green))]' 
+                      : 'bg-white/5 border-white/10 hover:bg-white/10 hover:border-white/20'
+                  }`}
+                  data-testid={`chain-option-${chain.name.toLowerCase().replace(/\s+/g, '-')}`}
+                >
+                  <ChainLogo chainId={chain.id} className="w-6 h-6" />
+                  <span className="text-xs font-medium text-white text-center leading-tight">{chain.name}</span>
+                </button>
+              ))}
+              {!showAllChains && SUPPORTED_CHAINS.length > 8 && (
+                <button
+                  onClick={() => setShowAllChains(true)}
+                  className="flex flex-col items-center justify-center gap-1.5 p-3 rounded-lg border border-white/10 bg-white/5 hover:bg-white/10 hover:border-white/20 transition-all cursor-pointer"
+                  data-testid="button-show-more-chains"
+                >
+                  <div className="w-6 h-6 rounded-full border-2 border-dashed border-white/40 flex items-center justify-center">
+                    <span className="text-white/60 text-lg font-bold">+</span>
+                  </div>
+                  <span className="text-xs font-medium text-white/60 text-center">{SUPPORTED_CHAINS.length - 8} more</span>
+                </button>
+              )}
+            </div>
+          </div>
+        </motion.div>
+      )}
     </div>
   );
 }
