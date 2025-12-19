@@ -14,12 +14,17 @@ import { useToast } from "@/hooks/use-toast";
 
 interface Quote {
   inputAmount: string;
+  inputToken: string;
+  inputUsdValue: string;
   outputAmount: string;
+  outputToken: string;
   slippageBps: number;
   feePercent: number;
   feeAmount: string;
   slippageAmount: string;
   estimatedTime: string;
+  exchangeRate: string;
+  prices: Record<string, number>;
 }
 
 export default function Home() {
