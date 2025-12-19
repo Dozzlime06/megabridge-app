@@ -35,6 +35,7 @@ export default function Home() {
   const [selectedChain, setSelectedChain] = useState<ChainConfig>(SUPPORTED_CHAINS[0]);
   const [showChainSelector, setShowChainSelector] = useState(false);
   const [showAllChains, setShowAllChains] = useState(false);
+  const [solanaAddress, setSolanaAddress] = useState("");
   
   const { login, logout, authenticated, ready } = usePrivy();
   const { wallets } = useWallets();
@@ -44,6 +45,9 @@ export default function Home() {
   useEffect(() => {
     const switchToChain = async () => {
       if (!activeWallet || !isBridgeIn) return;
+      // Skip chain switching for non-EVM chains like Solana
+      if (selectedChain.type !== 'evm') return;
+      
       try {
         const provider = await activeWallet.getEthereumProvider();
         const chainId = await provider.request({ method: "eth_chainId" });
@@ -82,25 +86,24 @@ export default function Home() {
     const fetchBalances = async () => {
       if (!activeWallet?.address) return;
 
-      try {
-        const sourceRes = await fetch(selectedChain.rpcUrl, {
-          method: "POST",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({
-            jsonrpc: "2.0",
-            method: "eth_getBalance",
-            params: [activeWallet.address, "latest"],
-            id: 1,
-          }),
-        });
-        const sourceData = await sourceRes.json();
-        if (sourceData.result) {
-          setSourceBalance((parseInt(sourceData.result, 16) / 1e18).toFixed(4));
+      // Skip balance fetch for Solana chain (requires Solana wallet, not EVM)
+      if (selectedChain.type === 'solana') {
+        setSourceBalance("N/A");
+      } else {
+        try {
+          const provider = await activeWallet.getEthereumProvider();
+          const balance = await provider.request({
+            method: 'eth_getBalance',
+            params: [activeWallet.address, 'latest']
+          });
+          setSourceBalance((parseInt(balance as string, 16) / 1e18).toFixed(4));
+        } catch (err) {
+          console.error("Failed to fetch source balance:", err);
+          setSourceBalance("0");
         }
-      } catch (err) {
-        console.error("Failed to fetch source balance:", err);
       }
 
+      // Fetch MegaETH balance
       try {
         const megaRes = await fetch(MEGAETH_CONFIG.rpcUrl, {
           method: "POST",
@@ -171,6 +174,18 @@ export default function Home() {
       return;
     }
 
+    // Validate Solana address if bridging from Solana
+    if (selectedChain.type === 'solana' && isBridgeIn) {
+      if (!solanaAddress || solanaAddress.length < 32 || solanaAddress.length > 44) {
+        toast({
+          title: "Invalid Solana Address",
+          description: "Please enter a valid Solana wallet address",
+          variant: "destructive",
+        });
+        return;
+      }
+    }
+
     setIsBridging(true);
     setBridgeSuccess(false);
     setTxHash(null);
@@ -179,6 +194,19 @@ export default function Home() {
       const provider = await activeWallet.getEthereumProvider();
       
       if (isBridgeIn) {
+        // For Solana bridging, show message that it's not yet supported
+        if (selectedChain.type === 'solana') {
+          toast({
+            title: "Solana Bridge Coming Soon",
+            description: "Solana bridging is currently being processed manually. Your request has been recorded.",
+          });
+          setBridgeSuccess(true);
+          setAmount("");
+          setIsBridging(false);
+          return;
+        }
+
+        // EVM chain bridging
         const chainId = await provider.request({ method: "eth_chainId" });
         if (parseInt(chainId as string, 16) !== selectedChain.id) {
           try {
@@ -487,6 +515,26 @@ export default function Home() {
                     </div>
                   </div>
                 </div>
+
+                {selectedChain.type === 'solana' && isBridgeIn && (
+                  <div className="bg-purple-500/10 border border-purple-500/20 rounded-lg p-4">
+                    <div className="flex items-center gap-2 mb-2">
+                      <ChainLogo chainId={selectedChain.id} className="w-4 h-4" />
+                      <span className="text-xs font-tech text-purple-400 uppercase tracking-wider">Solana Destination Address</span>
+                    </div>
+                    <Input 
+                      type="text" 
+                      placeholder="Enter your Solana wallet address" 
+                      className="bg-black/50 border-purple-500/30 text-white placeholder:text-purple-400/40 font-mono text-sm"
+                      value={solanaAddress}
+                      onChange={(e) => setSolanaAddress(e.target.value)}
+                      data-testid="input-solana-address"
+                    />
+                    <p className="text-xs text-purple-400/60 mt-2">
+                      Your bridged funds will be sent to this Solana address on MegaETH.
+                    </p>
+                  </div>
+                )}
               </div>
 
               {quote && parseFloat(amount) > 0 && (

@@ -1,0 +1,37 @@
+02:27:19.570 Running build in Washington, D.C., USA (East) – iad1
+02:27:19.571 Build machine configuration: 2 cores, 8 GB
+02:27:19.724 Cloning github.com/Dozzlime06/megabridge-app (Branch: main, Commit: 45ad796)
+02:27:20.878 Cloning completed: 1.154s
+02:27:20.963 Restored build cache from previous deployment (FjySarXgWYrAiniA1KE34eFq3z7n)
+02:27:23.599 Running "vercel build"
+02:27:24.055 Vercel CLI 50.1.3
+02:27:24.631 Running "install" command: `npm install`...
+02:27:36.236 
+02:27:36.238 added 10 packages, changed 2 packages, and audited 1104 packages in 11s
+02:27:36.238 
+02:27:36.239 134 packages are looking for funding
+02:27:36.239   run `npm fund` for details
+02:27:36.255 
+02:27:36.256 4 moderate severity vulnerabilities
+02:27:36.256 
+02:27:36.257 To address all issues (including breaking changes), run:
+02:27:36.257   npm audit fix --force
+02:27:36.257 
+02:27:36.258 Run `npm audit` for details.
+02:27:37.013 ✘ [ERROR] Could not resolve "/vercel/path0/vite.config.vercel.ts"
+02:27:37.013 
+02:27:37.015 [31mfailed to load config from /vercel/path0/vite.config.vercel.ts[39m
+02:27:37.016 [31merror during build:
+02:27:37.016 Error: Build failed with 1 error:
+02:27:37.016 error: Could not resolve "/vercel/path0/vite.config.vercel.ts"
+02:27:37.016     at failureErrorWithLog (/vercel/path0/node_modules/esbuild/lib/main.js:1467:15)
+02:27:37.017     at /vercel/path0/node_modules/esbuild/lib/main.js:926:25
+02:27:37.017     at runOnEndCallbacks (/vercel/path0/node_modules/esbuild/lib/main.js:1307:45)
+02:27:37.017     at buildResponseToResult (/vercel/path0/node_modules/esbuild/lib/main.js:924:7)
+02:27:37.017     at /vercel/path0/node_modules/esbuild/lib/main.js:951:16
+02:27:37.018     at responseCallbacks.<computed> (/vercel/path0/node_modules/esbuild/lib/main.js:603:9)
+02:27:37.018     at handleIncomingPacket (/vercel/path0/node_modules/esbuild/lib/main.js:658:12)
+02:27:37.018     at Socket.readFromStdout (/vercel/path0/node_modules/esbuild/lib/main.js:581:7)
+02:27:37.018     at Socket.emit (node:events:508:28)
+02:27:37.019     at addChunk (node:internal/streams/readable:559:12)[39m
+02:27:37.036 Error: Command "npx vite build --config vite.config.vercel.ts" exited with 1
