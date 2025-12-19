@@ -239,12 +239,12 @@ export const SUPPORTED_CHAINS: ChainConfig[] = [
 ];
 
 export const MEGAETH_CONFIG: ChainConfig = {
-  id: 6342,
+  id: 4326,
   name: 'MegaETH',
   symbol: 'ETH',
-  rpcUrl: 'https://rpc.megaeth.com',
-  explorerUrl: 'https://megaexplorer.xyz',
-  hexChainId: '0x18c6',
+  rpcUrl: 'https://rpc-secret-mega.poptyedev.com/',
+  explorerUrl: 'https://mega-explorer-leaked.poptyedev.com/',
+  hexChainId: '0x10e6',
   logoColor: '#00FF6A',
   type: 'evm',
   bridgeContract: DEFAULT_BRIDGE_CONTRACT,

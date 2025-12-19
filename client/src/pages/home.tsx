@@ -273,22 +273,22 @@ export default function Home() {
         });
       } else {
         const chainId = await provider.request({ method: "eth_chainId" });
-        if (parseInt(chainId as string, 16) !== 4326) {
+        if (parseInt(chainId as string, 16) !== MEGAETH_CONFIG.id) {
           try {
             await provider.request({
               method: "wallet_switchEthereumChain",
-              params: [{ chainId: "0x10e6" }],
+              params: [{ chainId: MEGAETH_CONFIG.hexChainId }],
             });
           } catch (switchError: any) {
             if (switchError.code === 4902) {
               await provider.request({
                 method: "wallet_addEthereumChain",
                 params: [{
-                  chainId: "0x10e6",
-                  chainName: "MEGA Mainnet",
-                  nativeCurrency: { name: "Ethereum", symbol: "ETH", decimals: 18 },
-                  rpcUrls: ["https://rpc-secret-mega.poptyedev.com/"],
-                  blockExplorerUrls: ["https://mega-explorer-leaked.poptyedev.com/"],
+                  chainId: MEGAETH_CONFIG.hexChainId,
+                  chainName: MEGAETH_CONFIG.name,
+                  nativeCurrency: { name: "Ethereum", symbol: MEGAETH_CONFIG.symbol, decimals: 18 },
+                  rpcUrls: [MEGAETH_CONFIG.rpcUrl],
+                  blockExplorerUrls: [MEGAETH_CONFIG.explorerUrl],
                 }],
               });
             }
