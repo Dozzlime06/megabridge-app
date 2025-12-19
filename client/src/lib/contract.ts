@@ -236,17 +236,6 @@ export const SUPPORTED_CHAINS: ChainConfig[] = [
     type: 'evm',
     bridgeContract: DEFAULT_BRIDGE_CONTRACT,
   },
-  {
-    id: -1,
-    name: 'Solana',
-    symbol: 'SOL',
-    rpcUrl: 'https://api.mainnet-beta.solana.com',
-    explorerUrl: 'https://solscan.io',
-    hexChainId: '',
-    logoColor: '#14F195',
-    type: 'solana',
-    bridgeContract: '6insNE7EpnkQmfpjqR96WZ7EtVo8Q8c4JsUdFZTWjmR1',
-  },
 ];
 
 export const MEGAETH_CONFIG: ChainConfig = {
