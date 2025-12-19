@@ -86,21 +86,27 @@ export default function Home() {
     const fetchBalances = async () => {
       if (!activeWallet?.address) return;
 
-      // Skip balance fetch for Solana chain (requires Solana wallet, not EVM)
-      if (selectedChain.type === 'solana') {
-        setSourceBalance("N/A");
-      } else {
-        try {
-          const provider = await activeWallet.getEthereumProvider();
-          const balance = await provider.request({
-            method: 'eth_getBalance',
-            params: [activeWallet.address, 'latest']
-          });
-          setSourceBalance((parseInt(balance as string, 16) / 1e18).toFixed(4));
-        } catch (err) {
-          console.error("Failed to fetch source balance:", err);
+      // Fetch source chain balance via RPC
+      try {
+        const sourceRes = await fetch(selectedChain.rpcUrl, {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({
+            jsonrpc: "2.0",
+            method: "eth_getBalance",
+            params: [activeWallet.address, "latest"],
+            id: 1,
+          }),
+        });
+        const sourceData = await sourceRes.json();
+        if (sourceData.result) {
+          setSourceBalance((parseInt(sourceData.result, 16) / 1e18).toFixed(4));
+        } else {
           setSourceBalance("0");
         }
+      } catch (err) {
+        console.error("Failed to fetch source balance:", err);
+        setSourceBalance("0");
       }
 
       // Fetch MegaETH balance
