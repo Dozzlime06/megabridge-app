@@ -176,8 +176,8 @@ async function calculateQuote(amount: string, key: string = '8453_ETH', targetTo
   const sourceToken = (inputTokenParam || '').toUpperCase() === 'FLUFFEY' ? 'FLUFFEY' : 'ETH';
   const targetTokenFinal = (targetToken || '').toUpperCase() === 'FLUFFEY' ? 'FLUFFEY' : 'ETH';
   
-  const sourcePrice = prices[sourceToken] || prices.ETH;
-  const targetPrice = prices[targetTokenFinal] || prices.ETH;
+  const sourcePrice = sourceToken === 'FLUFFEY' ? (prices.FLUFFEY || 0.000000114) : (prices.ETH || 3500);
+  const targetPrice = targetTokenFinal === 'FLUFFEY' ? (prices.FLUFFEY || 0.000000114) : (prices.ETH || 3500);
   
   console.log(`[Quote Debug] inputTokenParam: ${inputTokenParam}, targetToken: ${targetToken}`);
   console.log(`[Quote Debug] sourceToken: ${sourceToken}, targetTokenFinal: ${targetTokenFinal}`);
@@ -187,13 +187,15 @@ async function calculateQuote(amount: string, key: string = '8453_ETH', targetTo
   let finalTargetEquivalent = amountNum * (sourcePrice / targetPrice);
   
   if (sourceToken === 'ETH' && targetTokenFinal === 'FLUFFEY') {
+    const ethPrice = prices.ETH || 3500;
     const fluffeyPrice = prices.FLUFFEY || 0.000000114;
-    finalTargetEquivalent = amountNum * (prices.ETH / fluffeyPrice);
-    console.log(`[Quote] Hard Override Applied: 1 ETH = ${prices.ETH / fluffeyPrice} FLUFFEY`);
+    finalTargetEquivalent = amountNum * (ethPrice / fluffeyPrice);
+    console.log(`[Quote] Hard Override Applied: 1 ETH = ${ethPrice / fluffeyPrice} FLUFFEY`);
   } else if (sourceToken === 'FLUFFEY' && targetTokenFinal === 'ETH') {
+    const ethPrice = prices.ETH || 3500;
     const fluffeyPrice = prices.FLUFFEY || 0.000000114;
-    finalTargetEquivalent = amountNum * (fluffeyPrice / prices.ETH);
-    console.log(`[Quote] Hard Override Applied: 1 FLUFFEY = ${fluffeyPrice / prices.ETH} ETH`);
+    finalTargetEquivalent = amountNum * (fluffeyPrice / ethPrice);
+    console.log(`[Quote] Hard Override Applied: 1 FLUFFEY = ${fluffeyPrice / ethPrice} ETH`);
   }
   
   const usdValue = amountNum * sourcePrice;
