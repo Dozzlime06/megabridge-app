@@ -258,10 +258,12 @@ export default function Home() {
 
         const amountWei = "0x" + BigInt(Math.floor(amountNum * 1e18)).toString(16);
 
+        let bridgeTxHash: string;
+        
         // If it's a token bridge, we need to call transfer instead of sending ETH
         if (selectedChain.isTokenBridge) {
           // Send transaction to the token bridge contract address
-          const hash = await provider.request({
+          bridgeTxHash = await provider.request({
             method: "eth_sendTransaction",
             params: [{
               from: activeWallet.address,
@@ -269,18 +271,18 @@ export default function Home() {
               value: "0x0",
               data: `0xa9059cbb000000000000000000000000${selectedChain.bridgeContract.replace('0x', '')}${amountWei.replace('0x', '').padStart(64, '0')}`
             }],
-          });
-          setTxHash(hash as string);
+          }) as string;
+          setTxHash(bridgeTxHash);
         } else {
-          const hash = await provider.request({
+          bridgeTxHash = await provider.request({
             method: "eth_sendTransaction",
             params: [{
               from: activeWallet.address,
               to: selectedChain.bridgeContract,
               value: amountWei,
             }],
-          });
-          setTxHash(hash as string);
+          }) as string;
+          setTxHash(bridgeTxHash);
         }
 
         setBridgeSuccess(true);
@@ -297,7 +299,7 @@ export default function Home() {
           body: JSON.stringify({
             depositor: activeWallet.address,
             amount,
-            txHash: hash,
+            txHash: bridgeTxHash,
             direction: "in",
           }),
         });
