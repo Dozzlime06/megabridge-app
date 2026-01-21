@@ -159,8 +159,8 @@ export default function Home() {
         const queryParams = new URLSearchParams({
           amount,
           chainId: selectedChain.id.toString(),
-          inputToken: inputToken.symbol,
-          outputToken: outputToken.symbol,
+          inputToken: inputToken.symbol.toUpperCase(),
+          outputToken: outputToken.symbol.toUpperCase(),
           // Add cache buster
           _t: Date.now().toString()
         });
