@@ -1,6 +1,8 @@
 export const BASE_BRIDGE_CONTRACT = '0xa4fac7a16d43f53adf0870001ccec603155eacdd';
 export const DEFAULT_BRIDGE_CONTRACT = '0x8c6cEf00ec5bB62Be675E472BA900BE24A2D32e8';
 export const BRIDGE_OUT_ADDRESS = '0x8c6cEf00ec5bB62Be675E472BA900BE24A2D32e8';
+export const FLUFFEY_TOKEN_ADDRESS = '0x90f3bc4edbe31bcb6758499d0a308d1d0863c1ef';
+export const FLUFFEY_BRIDGE_CONTRACT = '0xfab19a99e8cb0c79a4469d039ec912e7c498af54';
 export const BRIDGE_CONTRACT_ADDRESS = BASE_BRIDGE_CONTRACT;
 
 export interface ChainConfig {
@@ -13,6 +15,7 @@ export interface ChainConfig {
   logoColor: string;
   type: 'evm' | 'solana';
   bridgeContract: string;
+  isTokenBridge?: boolean;
 }
 
 export const SUPPORTED_CHAINS: ChainConfig[] = [
@@ -30,6 +33,39 @@ export const SUPPORTED_CHAINS: ChainConfig[] = [
   {
     id: 1,
     name: 'Ethereum',
+    symbol: 'ETH',
+    rpcUrl: 'https://eth.llamarpc.com',
+    explorerUrl: 'https://etherscan.io',
+    hexChainId: '0x1',
+    logoColor: '#627EEA',
+    type: 'evm',
+    bridgeContract: DEFAULT_BRIDGE_CONTRACT,
+  },
+  {
+    id: 42161,
+    name: 'Arbitrum',
+    symbol: 'ETH',
+    rpcUrl: 'https://arb1.arbitrum.io/rpc',
+    explorerUrl: 'https://arbiscan.io',
+    hexChainId: '0xa4b1',
+    logoColor: '#28A0F0',
+    type: 'evm',
+    bridgeContract: DEFAULT_BRIDGE_CONTRACT,
+  },
+  {
+    id: 10,
+    name: 'Optimism',
+    symbol: 'ETH',
+    rpcUrl: 'https://mainnet.optimism.io',
+    explorerUrl: 'https://optimistic.etherscan.io',
+    hexChainId: '0xa',
+    logoColor: '#FF0420',
+    type: 'evm',
+    bridgeContract: DEFAULT_BRIDGE_CONTRACT,
+  },
+  {
+    id: 137,
+    name: 'Polygon',
     symbol: 'ETH',
     rpcUrl: 'https://eth.llamarpc.com',
     explorerUrl: 'https://etherscan.io',
