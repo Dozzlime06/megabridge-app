@@ -189,6 +189,7 @@ async function calculateQuote(amount: string, key: string = '8453_ETH', targetTo
   if (sourceToken === 'ETH' && targetTokenFinal === 'FLUFFEY') {
     const ethPrice = prices.ETH || 3500;
     const fluffeyPrice = prices.FLUFFEY || 0.000000114;
+    // 1 ETH = 30,701,754,385.96 FLUFFEY (approx based on $3500 / $0.000000114)
     finalTargetEquivalent = amountNum * (ethPrice / fluffeyPrice);
     console.log(`[Quote] Hard Override Applied: 1 ETH = ${ethPrice / fluffeyPrice} FLUFFEY`);
   } else if (sourceToken === 'FLUFFEY' && targetTokenFinal === 'ETH') {
@@ -209,12 +210,12 @@ async function calculateQuote(amount: string, key: string = '8453_ETH', targetTo
     inputAmount: amount,
     inputToken: sourceToken,
     inputUsdValue: usdValue.toFixed(2),
-    outputAmount: receivedAmount.toFixed(6),
-    outputToken: targetToken,
+    outputAmount: receivedAmount.toFixed(receivedAmount < 1 ? 9 : 2),
+    outputToken: targetTokenFinal,
     slippageBps: SLIPPAGE_BPS,
     feePercent: BRIDGE_FEE_PERCENT,
-    feeAmount: feeAmount.toFixed(6),
-    slippageAmount: slippageAmount.toFixed(6),
+    feeAmount: feeAmount.toFixed(receivedAmount < 1 ? 9 : 2),
+    slippageAmount: slippageAmount.toFixed(receivedAmount < 1 ? 9 : 2),
     estimatedTime: "~5 minutes",
     exchangeRate: (sourcePrice / targetPrice).toFixed(6),
     prices: {
