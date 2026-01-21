@@ -685,7 +685,7 @@ export default function Home() {
                      {isBridgeIn ? "Bridge Initiated!" : "Bridge Out Initiated!"}
                    </div>
                    <p className="text-xs text-yellow-400/80">
-                     Your funds have been submitted for bridging. Please wait approximately <strong>30 minutes</strong> for the transfer to complete on {isBridgeIn ? "MegaETH" : "Base"}.
+                     Your funds have been submitted for bridging. Please wait approximately <strong>5 minutes</strong> for the transfer to complete on {isBridgeIn ? "MegaETH" : "Base"}.
                    </p>
                    {txHash && (
                      <a 
