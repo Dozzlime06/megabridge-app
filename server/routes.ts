@@ -19,6 +19,15 @@ const TOKEN_DECIMALS: Record<string, number> = {
   xDAI: 18,
   HYPE: 18,
   FLUFFEY: 18,
+  MEKA: 18,
+  KUMA: 18,
+};
+
+// Mania.fun token addresses on MegaETH mainnet
+const MANIA_TOKENS: Record<string, string> = {
+  FLUFFEY: '0xc5808cf8be4e4ce012aa65bf6f60e24a3cc82071',
+  MEKA: '0x238214f6026601d5136ed88b5905e909ba06997b',
+  KUMA: '0xd34f85ba2a331514666f3040f43d83306c7a85df',
 };
 
 const CHAIN_TOKEN: Record<string, string> = {
@@ -66,8 +75,9 @@ async function fetchPrices(): Promise<Record<string, number>> {
     FTM: 'fantom',
   };
 
-  const prices: Record<string, number> = { xDAI: 1, FLUFFEY: 0.000000114 };
+  const prices: Record<string, number> = { xDAI: 1 };
 
+  // Fetch major token prices from CoinGecko (real-time)
   try {
     const ids = Object.values(coinGeckoIds).join(',');
     const response = await fetch(
@@ -86,53 +96,39 @@ async function fetchPrices(): Promise<Record<string, number>> {
       for (const [symbol, geckoId] of Object.entries(coinGeckoIds)) {
         if (data[geckoId]?.usd) {
           prices[symbol] = data[geckoId].usd;
+          console.log(`[Prices] ${symbol}: $${data[geckoId].usd} (real-time from CoinGecko)`);
         }
       }
-      // Ensure FLUFFEY is explicitly set even after CG fetch
-      prices.FLUFFEY = 0.000000114;
     }
   } catch (e) {
     console.log('Failed to fetch prices from CoinGecko:', e);
   }
 
-  // Fetch FLUFFEY price from DexScreener (MegaETH chain)
-  try {
-    const fluffeyRes = await fetch(
-      'https://api.dexscreener.com/latest/dex/tokens/0xd774dd586cd0bb1c242e75b06a02eacc951629fa',
-      { headers: { 'Accept': 'application/json' } }
-    );
-    if (fluffeyRes.ok) {
-      const fluffeyData = await fluffeyRes.json();
-      const pairs = fluffeyData.pairs || [];
-      // Prioritize MegaETH/Mega pairs or Noxa DEX
-      const pair = pairs.find((p: any) => 
-        p.chainId === 'megaeth' || p.chainId === 'mega' || p.dexId === 'noxa'
-      ) || pairs[0];
-      
-      const price = pair?.priceUsd;
-      
-      if (price) {
-        prices.FLUFFEY = parseFloat(price);
-        console.log(`[Prices] Set FLUFFEY price to actual: $${prices.FLUFFEY} from DexScreener (${pair?.chainId}/${pair?.dexId})`);
-      } else {
-        // Fallback to a hardcoded price if API returns nothing to avoid 1:1
-        prices.FLUFFEY = 0.000000114; 
-        console.log('[Prices] No priceUsd found, using safety fallback for FLUFFEY');
+  // Fetch mania.fun token prices from their API (real-time)
+  for (const [symbol, address] of Object.entries(MANIA_TOKENS)) {
+    try {
+      const res = await fetch(
+        `https://mania.fun/api/token/${address}`,
+        { 
+          headers: { 'Accept': 'application/json' },
+          signal: AbortSignal.timeout(5000)
+        }
+      );
+      if (res.ok) {
+        const data = await res.json();
+        if (data.success && data.data?.currentPrice) {
+          prices[symbol] = data.data.currentPrice;
+          const priceInEth = data.data.currentPriceETH || 0;
+          const tokensPerEth = priceInEth > 0 ? (1 / priceInEth).toFixed(0) : 'N/A';
+          console.log(`[Prices] ${symbol}: $${prices[symbol].toFixed(8)} (mania.fun: 1 ETH = ${tokensPerEth} ${symbol})`);
+        }
       }
-    } else {
-      console.log(`[Prices] DexScreener response not ok: ${fluffeyRes.status}`);
-      prices.FLUFFEY = 0.000000114;
+    } catch (e) {
+      console.log(`[Prices] Failed to fetch ${symbol} from mania.fun:`, e);
     }
-  } catch (e) {
-    console.log('[Prices] Failed to fetch FLUFFEY price:', e);
-    prices.FLUFFEY = 0.000000114;
   }
   
-  // FINAL SAFETY CHECK: If FLUFFEY price is still same as ETH or invalid, force it
-  if (!prices.FLUFFEY || prices.FLUFFEY > 1) {
-     prices.FLUFFEY = 0.000000114;
-  }
-  
+  // Fetch HYPE price from CoinGecko (real-time)
   try {
     const hypeRes = await fetch(
       'https://api.coingecko.com/api/v3/simple/price?ids=hyperliquid&vs_currencies=usd',
@@ -142,14 +138,19 @@ async function fetchPrices(): Promise<Record<string, number>> {
       const hypeData = await hypeRes.json();
       if (hypeData.hyperliquid?.usd) {
         prices.HYPE = hypeData.hyperliquid.usd;
+        console.log(`[Prices] HYPE: $${prices.HYPE} (real-time from CoinGecko)`);
       }
     }
   } catch (e) {
     console.log('[Prices] Failed to fetch HYPE price separately');
   }
   
-  if (!prices.ETH) prices.ETH = 3500;
-  if (!prices.SOL) prices.SOL = 180;
+  // Safety fallbacks only if API completely fails (should rarely happen)
+  if (!prices.ETH) {
+    console.log('[Prices] WARNING: Using fallback ETH price');
+    prices.ETH = 3000;
+  }
+  if (!prices.SOL) prices.SOL = 150;
   if (!prices.MATIC) prices.MATIC = 0.5;
   if (!prices.BNB) prices.BNB = 600;
   if (!prices.AVAX) prices.AVAX = 35;
@@ -158,8 +159,20 @@ async function fetchPrices(): Promise<Record<string, number>> {
   if (!prices.MNT) prices.MNT = 0.8;
   if (!prices.HYPE) prices.HYPE = 25;
   
+  // Mania.fun token fallbacks (should use real API prices, these are safety fallbacks)
+  if (!prices.FLUFFEY || prices.FLUFFEY <= 0) {
+    console.log('[Prices] WARNING: Using fallback FLUFFEY price');
+    prices.FLUFFEY = 0.0001; // ~$100k market cap / 1B supply
+  }
+  if (!prices.MEKA || prices.MEKA <= 0) {
+    prices.MEKA = 0.00002;
+  }
+  if (!prices.KUMA || prices.KUMA <= 0) {
+    prices.KUMA = 0.000015;
+  }
+  
   priceCache = { prices, timestamp: Date.now() };
-  console.log(`[Prices] Updated at ${new Date().toISOString()}:`, prices);
+  console.log(`[Prices] Final prices at ${new Date().toISOString()}:`, prices);
   return prices;
 }
 
@@ -171,31 +184,24 @@ async function calculateQuote(amount: string, key: string = '8453_ETH', targetTo
   
   const prices = await fetchPrices();
   
-  // FORCE OVERRIDE: If the input token is ETH, we use the ETH price.
-  // If the output token is FLUFFEY, we use the FLUFFEY price.
-  const sourceToken = (inputTokenParam || '').toUpperCase() === 'FLUFFEY' ? 'FLUFFEY' : 'ETH';
-  const targetTokenFinal = (targetToken || '').toUpperCase() === 'FLUFFEY' ? 'FLUFFEY' : 'ETH';
+  // Normalize token symbols
+  const sourceToken = (inputTokenParam || 'ETH').toUpperCase();
+  const targetTokenFinal = (targetToken || 'ETH').toUpperCase();
   
-  const ethPrice = prices.ETH || 3500;
-  const fluffeyPrice = prices.FLUFFEY || 0.000000114;
-  
-  const sourcePrice = sourceToken === 'FLUFFEY' ? fluffeyPrice : ethPrice;
-  const targetPrice = targetTokenFinal === 'FLUFFEY' ? fluffeyPrice : ethPrice;
+  // Get prices for source and target tokens
+  const sourcePrice = prices[sourceToken] || prices.ETH;
+  const targetPrice = prices[targetTokenFinal] || prices.ETH;
   
   console.log(`[Quote Debug] inputTokenParam: ${inputTokenParam}, targetToken: ${targetToken}`);
   console.log(`[Quote Debug] sourceToken: ${sourceToken}, targetTokenFinal: ${targetTokenFinal}`);
-  console.log(`[Quote Debug] sourcePrice: ${sourcePrice}, targetPrice: ${targetPrice}`);
+  console.log(`[Quote Debug] sourcePrice: $${sourcePrice}, targetPrice: $${targetPrice}`);
 
-  // HARD OVERRIDE FOR FLUFFEY/ETH PAIR TO ENSURE NO 1:1
-  let finalTargetEquivalent = amountNum * (sourcePrice / targetPrice);
+  // Calculate target amount based on USD value equivalence
+  const finalTargetEquivalent = amountNum * (sourcePrice / targetPrice);
   
-  if (sourceToken === 'ETH' && targetTokenFinal === 'FLUFFEY') {
-    // 1 ETH = 30,701,754,385.96 FLUFFEY (approx based on $3500 / $0.000000114)
-    finalTargetEquivalent = amountNum * (ethPrice / fluffeyPrice);
-    console.log(`[Quote] Hard Override Applied: 1 ETH = ${ethPrice / fluffeyPrice} FLUFFEY`);
-  } else if (sourceToken === 'FLUFFEY' && targetTokenFinal === 'ETH') {
-    finalTargetEquivalent = amountNum * (fluffeyPrice / ethPrice);
-    console.log(`[Quote] Hard Override Applied: 1 FLUFFEY = ${fluffeyPrice / ethPrice} ETH`);
+  // Log the exchange rate
+  if (sourceToken !== targetTokenFinal) {
+    console.log(`[Quote] 1 ${sourceToken} = ${(sourcePrice / targetPrice).toFixed(2)} ${targetTokenFinal}`);
   }
   
   const usdValue = amountNum * sourcePrice;
@@ -220,7 +226,7 @@ async function calculateQuote(amount: string, key: string = '8453_ETH', targetTo
     prices: {
       [sourceToken]: sourcePrice,
       [targetTokenFinal]: targetPrice,
-      ETH: ethPrice,
+      ETH: prices.ETH,
     },
   };
 }

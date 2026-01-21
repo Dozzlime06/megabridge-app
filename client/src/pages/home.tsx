@@ -12,6 +12,23 @@ import { usePrivy, useWallets } from "@privy-io/react-auth";
 import { BRIDGE_OUT_ADDRESS, MAX_DEPOSIT, SUPPORTED_CHAINS, MEGAETH_CONFIG, ChainConfig } from "@/lib/contract";
 import { useToast } from "@/hooks/use-toast";
 
+interface TokenInfo {
+  symbol: string;
+  name: string;
+  address: string;
+  sourceAddress?: string;
+  tag?: string;
+  decimals: number;
+}
+
+const MEGAETH_TOKENS: TokenInfo[] = [
+  { symbol: "ETH", name: "Ethereum", address: "", decimals: 18 },
+  { symbol: "FLUFFEY", name: "Fluffey", address: "0xd774dd586cd0bb1c242e75b06a02eacc951629fa", sourceAddress: "0x90f3bc4edbe31bcb6758499d0a308d1d0863c1ef", decimals: 18 },
+  { symbol: "FLUFFEY", name: "Fluffey", address: "0xc5808cf8be4e4ce012aa65bf6f60e24a3cc82071", tag: "mania.fun", decimals: 18 },
+  { symbol: "MEKA", name: "meka", address: "0x238214f6026601d5136ed88b5905e909ba06997b", tag: "mania.fun", decimals: 18 },
+  { symbol: "KUMA", name: "Kuma", address: "0xd34f85ba2a331514666f3040f43d83306c7a85df", tag: "mania.fun", decimals: 18 },
+];
+
 interface Quote {
   inputAmount: string;
   inputToken: string;
@@ -31,8 +48,10 @@ interface Quote {
 
 export default function Home() {
   const [amount, setAmount] = useState("");
-  const [inputToken, setInputToken] = useState({ symbol: "ETH", address: "" });
-  const [outputToken, setOutputToken] = useState({ symbol: "FLUFFEY", address: "0xfab19a99e8cb0c79a4469d039ec912e7c498af54" });
+  const [inputToken, setInputToken] = useState<TokenInfo>(MEGAETH_TOKENS[0]);
+  const [outputToken, setOutputToken] = useState<TokenInfo>(MEGAETH_TOKENS[1]);
+  const [showInputTokenSelector, setShowInputTokenSelector] = useState(false);
+  const [showOutputTokenSelector, setShowOutputTokenSelector] = useState(false);
   const [isBridging, setIsBridging] = useState(false);
   const [bridgeSuccess, setBridgeSuccess] = useState(false);
   const [txHash, setTxHash] = useState<string | null>(null);
@@ -529,17 +548,32 @@ export default function Home() {
                         />
                       </div>
                     </div>
-                    <div className="flex justify-start">
+                    <div className="flex justify-start relative">
                       <button 
                         className="flex items-center gap-2 bg-black/50 px-2 py-1.5 rounded border border-white/10 hover:border-white/20 transition-colors cursor-pointer"
-                        onClick={() => {
-                          const newSymbol = inputToken.symbol === "ETH" ? "FLUFFEY" : "ETH";
-                          setInputToken({ symbol: newSymbol, address: newSymbol === "FLUFFEY" ? "0x90f3bc4edbe31bcb6758499d0a308d1d0863c1ef" : "" });
-                        }}
+                        onClick={() => setShowInputTokenSelector(!showInputTokenSelector)}
                       >
                         <span className="font-medium text-xs text-white">{inputToken.symbol}</span>
+                        {inputToken.tag && <span className="text-[9px] px-1 py-0.5 bg-purple-500/30 text-purple-300 rounded">{inputToken.tag}</span>}
                         <ChevronDown className="w-3 h-3 text-muted-foreground" />
                       </button>
+                      {showInputTokenSelector && (
+                        <div className="absolute top-full left-0 mt-1 bg-card border border-white/10 rounded-lg shadow-xl z-50 min-w-[160px] py-1">
+                          {MEGAETH_TOKENS.map((token) => (
+                            <button
+                              key={token.symbol}
+                              className="w-full px-3 py-2 text-left hover:bg-white/5 flex items-center justify-between gap-2"
+                              onClick={() => {
+                                setInputToken(token);
+                                setShowInputTokenSelector(false);
+                              }}
+                            >
+                              <span className="text-sm text-white">{token.symbol}</span>
+                              {token.tag && <span className="text-[9px] px-1 py-0.5 bg-purple-500/30 text-purple-300 rounded">{token.tag}</span>}
+                            </button>
+                          ))}
+                        </div>
+                      )}
                     </div>
                   </div>
                 </div>
@@ -597,20 +631,32 @@ export default function Home() {
                          </span>
                       </div>
                     </div>
-                    <div className="flex justify-start">
+                    <div className="flex justify-start relative">
                       <button 
                         className="flex items-center gap-2 bg-black/50 px-2 py-1.5 rounded border border-white/10 hover:border-white/20 transition-colors cursor-pointer"
-                        onClick={() => {
-                          const newSymbol = outputToken.symbol === "ETH" ? "FLUFFEY" : "ETH";
-                          setOutputToken({ 
-                            symbol: newSymbol, 
-                            address: newSymbol === "FLUFFEY" ? "0xfab19a99e8cb0c79a4469d039ec912e7c498af54" : "" 
-                          });
-                        }}
+                        onClick={() => setShowOutputTokenSelector(!showOutputTokenSelector)}
                       >
                         <span className="font-medium text-xs text-white">{outputToken.symbol}</span>
+                        {outputToken.tag && <span className="text-[9px] px-1 py-0.5 bg-purple-500/30 text-purple-300 rounded">{outputToken.tag}</span>}
                         <ChevronDown className="w-3 h-3 text-muted-foreground" />
                       </button>
+                      {showOutputTokenSelector && (
+                        <div className="absolute top-full left-0 mt-1 bg-card border border-white/10 rounded-lg shadow-xl z-50 min-w-[160px] py-1">
+                          {MEGAETH_TOKENS.map((token) => (
+                            <button
+                              key={token.symbol}
+                              className="w-full px-3 py-2 text-left hover:bg-white/5 flex items-center justify-between gap-2"
+                              onClick={() => {
+                                setOutputToken(token);
+                                setShowOutputTokenSelector(false);
+                              }}
+                            >
+                              <span className="text-sm text-white">{token.symbol}</span>
+                              {token.tag && <span className="text-[9px] px-1 py-0.5 bg-purple-500/30 text-purple-300 rounded">{token.tag}</span>}
+                            </button>
+                          ))}
+                        </div>
+                      )}
                     </div>
                   </div>
                 </div>
