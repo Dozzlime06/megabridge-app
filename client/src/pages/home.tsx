@@ -153,16 +153,21 @@ export default function Home() {
     }
 
     const fetchQuote = async () => {
+      if (!amount || parseFloat(amount) <= 0) return;
+      
       try {
         const queryParams = new URLSearchParams({
           amount,
           chainId: selectedChain.id.toString(),
           inputToken: inputToken.symbol,
-          outputToken: outputToken.symbol
+          outputToken: outputToken.symbol,
+          // Add cache buster
+          _t: Date.now().toString()
         });
         const res = await fetch(`/api/quote?${queryParams.toString()}`);
         if (res.ok) {
           const data = await res.json();
+          console.log("[Quote] Received:", data);
           setQuote(data);
         }
       } catch (err) {
