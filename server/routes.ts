@@ -176,8 +176,11 @@ async function calculateQuote(amount: string, key: string = '8453_ETH', targetTo
   const sourceToken = (inputTokenParam || '').toUpperCase() === 'FLUFFEY' ? 'FLUFFEY' : 'ETH';
   const targetTokenFinal = (targetToken || '').toUpperCase() === 'FLUFFEY' ? 'FLUFFEY' : 'ETH';
   
-  const sourcePrice = sourceToken === 'FLUFFEY' ? (prices.FLUFFEY || 0.000000114) : (prices.ETH || 3500);
-  const targetPrice = targetTokenFinal === 'FLUFFEY' ? (prices.FLUFFEY || 0.000000114) : (prices.ETH || 3500);
+  const ethPrice = prices.ETH || 3500;
+  const fluffeyPrice = prices.FLUFFEY || 0.000000114;
+  
+  const sourcePrice = sourceToken === 'FLUFFEY' ? fluffeyPrice : ethPrice;
+  const targetPrice = targetTokenFinal === 'FLUFFEY' ? fluffeyPrice : ethPrice;
   
   console.log(`[Quote Debug] inputTokenParam: ${inputTokenParam}, targetToken: ${targetToken}`);
   console.log(`[Quote Debug] sourceToken: ${sourceToken}, targetTokenFinal: ${targetTokenFinal}`);
@@ -187,14 +190,10 @@ async function calculateQuote(amount: string, key: string = '8453_ETH', targetTo
   let finalTargetEquivalent = amountNum * (sourcePrice / targetPrice);
   
   if (sourceToken === 'ETH' && targetTokenFinal === 'FLUFFEY') {
-    const ethPrice = prices.ETH || 3500;
-    const fluffeyPrice = prices.FLUFFEY || 0.000000114;
     // 1 ETH = 30,701,754,385.96 FLUFFEY (approx based on $3500 / $0.000000114)
     finalTargetEquivalent = amountNum * (ethPrice / fluffeyPrice);
     console.log(`[Quote] Hard Override Applied: 1 ETH = ${ethPrice / fluffeyPrice} FLUFFEY`);
   } else if (sourceToken === 'FLUFFEY' && targetTokenFinal === 'ETH') {
-    const ethPrice = prices.ETH || 3500;
-    const fluffeyPrice = prices.FLUFFEY || 0.000000114;
     finalTargetEquivalent = amountNum * (fluffeyPrice / ethPrice);
     console.log(`[Quote] Hard Override Applied: 1 FLUFFEY = ${fluffeyPrice / ethPrice} ETH`);
   }
@@ -210,18 +209,18 @@ async function calculateQuote(amount: string, key: string = '8453_ETH', targetTo
     inputAmount: amount,
     inputToken: sourceToken,
     inputUsdValue: usdValue.toFixed(2),
-    outputAmount: receivedAmount.toFixed(receivedAmount < 1 ? 9 : 2),
+    outputAmount: receivedAmount.toFixed(receivedAmount > 100 ? 2 : 9),
     outputToken: targetTokenFinal,
     slippageBps: SLIPPAGE_BPS,
     feePercent: BRIDGE_FEE_PERCENT,
-    feeAmount: feeAmount.toFixed(receivedAmount < 1 ? 9 : 2),
-    slippageAmount: slippageAmount.toFixed(receivedAmount < 1 ? 9 : 2),
+    feeAmount: feeAmount.toFixed(receivedAmount > 100 ? 2 : 9),
+    slippageAmount: slippageAmount.toFixed(receivedAmount > 100 ? 2 : 9),
     estimatedTime: "~5 minutes",
     exchangeRate: (sourcePrice / targetPrice).toFixed(6),
     prices: {
       [sourceToken]: sourcePrice,
       [targetTokenFinal]: targetPrice,
-      ETH: prices.ETH || 3500,
+      ETH: ethPrice,
     },
   };
 }
