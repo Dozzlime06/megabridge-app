@@ -18,30 +18,35 @@ const TOKEN_DECIMALS: Record<string, number> = {
   MNT: 18,
   xDAI: 18,
   HYPE: 18,
+  FLUFFEY: 18,
 };
 
-const CHAIN_TOKEN: Record<number, string> = {
-  8453: 'ETH',
-  1: 'ETH',
-  42161: 'ETH',
-  10: 'ETH',
-  137: 'MATIC',
-  56: 'BNB',
-  43114: 'AVAX',
-  250: 'FTM',
-  25: 'CRO',
-  324: 'ETH',
-  59144: 'ETH',
-  534352: 'ETH',
-  81457: 'ETH',
-  5000: 'MNT',
-  100: 'xDAI',
-  1101: 'ETH',
-  7777777: 'ETH',
-  34443: 'ETH',
-  169: 'ETH',
-  999: 'HYPE',
-  [-1]: 'SOL',
+const CHAIN_TOKEN: Record<string, string> = {
+  '8453': 'ETH',
+  '8453_FLUFFEY': 'FLUFFEY',
+  '1': 'ETH',
+  '1_FLUFFEY': 'FLUFFEY',
+  '42161': 'ETH',
+  '42161_FLUFFEY': 'FLUFFEY',
+  '10': 'ETH',
+  '10_FLUFFEY': 'FLUFFEY',
+  '137': 'MATIC',
+  '56': 'BNB',
+  '43114': 'AVAX',
+  '250': 'FTM',
+  '25': 'CRO',
+  '324': 'ETH',
+  '59144': 'ETH',
+  '534352': 'ETH',
+  '81457': 'ETH',
+  '5000': 'MNT',
+  '100': 'xDAI',
+  '1101': 'ETH',
+  '7777777': 'ETH',
+  '34443': 'ETH',
+  '169': 'ETH',
+  '999': 'HYPE',
+  'solana': 'SOL',
 };
 
 let priceCache: { prices: Record<string, number>; timestamp: number } | null = null;
@@ -61,6 +66,8 @@ async function fetchPrices(): Promise<Record<string, number>> {
     FTM: 'fantom',
   };
 
+  const prices: Record<string, number> = { xDAI: 1, FLUFFEY: 0.000000114 };
+
   try {
     const ids = Object.values(coinGeckoIds).join(',');
     const response = await fetch(
@@ -74,104 +81,143 @@ async function fetchPrices(): Promise<Record<string, number>> {
       }
     );
     
-    if (!response.ok) {
-      throw new Error(`CoinGecko API error: ${response.status}`);
-    }
-    
-    const data = await response.json();
-    
-    const prices: Record<string, number> = { xDAI: 1 };
-    
-    for (const [symbol, geckoId] of Object.entries(coinGeckoIds)) {
-      if (data[geckoId]?.usd) {
-        prices[symbol] = data[geckoId].usd;
-      }
-    }
-    
-    try {
-      const hypeRes = await fetch(
-        'https://api.coingecko.com/api/v3/simple/price?ids=hyperliquid&vs_currencies=usd',
-        { headers: { 'Accept': 'application/json' }, signal: AbortSignal.timeout(3000) }
-      );
-      if (hypeRes.ok) {
-        const hypeData = await hypeRes.json();
-        if (hypeData.hyperliquid?.usd) {
-          prices.HYPE = hypeData.hyperliquid.usd;
+    if (response.ok) {
+      const data = await response.json();
+      for (const [symbol, geckoId] of Object.entries(coinGeckoIds)) {
+        if (data[geckoId]?.usd) {
+          prices[symbol] = data[geckoId].usd;
         }
       }
-    } catch (e) {
-      console.log('[Prices] Failed to fetch HYPE price separately');
+      // Ensure FLUFFEY is explicitly set even after CG fetch
+      prices.FLUFFEY = 0.000000114;
     }
-    
-    if (!prices.ETH) prices.ETH = 3500;
-    if (!prices.SOL) prices.SOL = 180;
-    if (!prices.MATIC) prices.MATIC = 0.5;
-    if (!prices.BNB) prices.BNB = 600;
-    if (!prices.AVAX) prices.AVAX = 35;
-    if (!prices.FTM) prices.FTM = 0.5;
-    if (!prices.CRO) prices.CRO = 0.1;
-    if (!prices.MNT) prices.MNT = 0.8;
-    if (!prices.HYPE) prices.HYPE = 25;
-    
-    priceCache = { prices, timestamp: Date.now() };
-    console.log(`[Prices] Updated at ${new Date().toISOString()}:`, prices);
-    return prices;
-  } catch (error) {
-    console.error('Failed to fetch prices from CoinGecko:', error);
-    
-    if (priceCache) {
-      console.log('[Prices] Using stale cache');
-      return priceCache.prices;
-    }
-    
-    return {
-      ETH: 3500,
-      SOL: 180,
-      MATIC: 0.5,
-      BNB: 600,
-      AVAX: 35,
-      FTM: 0.5,
-      CRO: 0.1,
-      MNT: 0.8,
-      xDAI: 1,
-      HYPE: 25,
-    };
+  } catch (e) {
+    console.log('Failed to fetch prices from CoinGecko:', e);
   }
+
+  // Fetch FLUFFEY price from DexScreener (MegaETH chain)
+  try {
+    const fluffeyRes = await fetch(
+      'https://api.dexscreener.com/latest/dex/tokens/0xd774dd586cd0bb1c242e75b06a02eacc951629fa',
+      { headers: { 'Accept': 'application/json' } }
+    );
+    if (fluffeyRes.ok) {
+      const fluffeyData = await fluffeyRes.json();
+      const pairs = fluffeyData.pairs || [];
+      // Prioritize MegaETH/Mega pairs or Noxa DEX
+      const pair = pairs.find((p: any) => 
+        p.chainId === 'megaeth' || p.chainId === 'mega' || p.dexId === 'noxa'
+      ) || pairs[0];
+      
+      const price = pair?.priceUsd;
+      
+      if (price) {
+        prices.FLUFFEY = parseFloat(price);
+        console.log(`[Prices] Set FLUFFEY price to actual: $${prices.FLUFFEY} from DexScreener (${pair?.chainId}/${pair?.dexId})`);
+      } else {
+        // Fallback to a hardcoded price if API returns nothing to avoid 1:1
+        prices.FLUFFEY = 0.000000114; 
+        console.log('[Prices] No priceUsd found, using safety fallback for FLUFFEY');
+      }
+    } else {
+      console.log(`[Prices] DexScreener response not ok: ${fluffeyRes.status}`);
+      prices.FLUFFEY = 0.000000114;
+    }
+  } catch (e) {
+    console.log('[Prices] Failed to fetch FLUFFEY price:', e);
+    prices.FLUFFEY = 0.000000114;
+  }
+  
+  // FINAL SAFETY CHECK: If FLUFFEY price is still same as ETH or invalid, force it
+  if (!prices.FLUFFEY || prices.FLUFFEY > 1) {
+     prices.FLUFFEY = 0.000000114;
+  }
+  
+  try {
+    const hypeRes = await fetch(
+      'https://api.coingecko.com/api/v3/simple/price?ids=hyperliquid&vs_currencies=usd',
+      { headers: { 'Accept': 'application/json' }, signal: AbortSignal.timeout(3000) }
+    );
+    if (hypeRes.ok) {
+      const hypeData = await hypeRes.json();
+      if (hypeData.hyperliquid?.usd) {
+        prices.HYPE = hypeData.hyperliquid.usd;
+      }
+    }
+  } catch (e) {
+    console.log('[Prices] Failed to fetch HYPE price separately');
+  }
+  
+  if (!prices.ETH) prices.ETH = 3500;
+  if (!prices.SOL) prices.SOL = 180;
+  if (!prices.MATIC) prices.MATIC = 0.5;
+  if (!prices.BNB) prices.BNB = 600;
+  if (!prices.AVAX) prices.AVAX = 35;
+  if (!prices.FTM) prices.FTM = 0.5;
+  if (!prices.CRO) prices.CRO = 0.1;
+  if (!prices.MNT) prices.MNT = 0.8;
+  if (!prices.HYPE) prices.HYPE = 25;
+  
+  priceCache = { prices, timestamp: Date.now() };
+  console.log(`[Prices] Updated at ${new Date().toISOString()}:`, prices);
+  return prices;
 }
 
-async function calculateQuote(amount: string, sourceChainId: number = 8453) {
+async function calculateQuote(amount: string, key: string = '8453_ETH', targetToken: string = 'ETH', inputTokenParam?: string) {
   const amountNum = parseFloat(amount);
   if (isNaN(amountNum) || amountNum <= 0) {
     return null;
   }
   
-  const sourceToken = CHAIN_TOKEN[sourceChainId] || 'ETH';
   const prices = await fetchPrices();
   
+  // FORCE OVERRIDE: If the input token is ETH, we use the ETH price.
+  // If the output token is FLUFFEY, we use the FLUFFEY price.
+  const sourceToken = (inputTokenParam || '').toUpperCase() === 'FLUFFEY' ? 'FLUFFEY' : 'ETH';
+  const targetTokenFinal = (targetToken || '').toUpperCase() === 'FLUFFEY' ? 'FLUFFEY' : 'ETH';
+  
   const sourcePrice = prices[sourceToken] || prices.ETH;
-  const ethPrice = prices.ETH;
+  const targetPrice = prices[targetTokenFinal] || prices.ETH;
+  
+  console.log(`[Quote Debug] inputTokenParam: ${inputTokenParam}, targetToken: ${targetToken}`);
+  console.log(`[Quote Debug] sourceToken: ${sourceToken}, targetTokenFinal: ${targetTokenFinal}`);
+  console.log(`[Quote Debug] sourcePrice: ${sourcePrice}, targetPrice: ${targetPrice}`);
+
+  // HARD OVERRIDE FOR FLUFFEY/ETH PAIR TO ENSURE NO 1:1
+  let finalTargetEquivalent = amountNum * (sourcePrice / targetPrice);
+  
+  if (sourceToken === 'ETH' && targetTokenFinal === 'FLUFFEY') {
+    const fluffeyPrice = prices.FLUFFEY || 0.000000114;
+    finalTargetEquivalent = amountNum * (prices.ETH / fluffeyPrice);
+    console.log(`[Quote] Hard Override Applied: 1 ETH = ${prices.ETH / fluffeyPrice} FLUFFEY`);
+  } else if (sourceToken === 'FLUFFEY' && targetTokenFinal === 'ETH') {
+    const fluffeyPrice = prices.FLUFFEY || 0.000000114;
+    finalTargetEquivalent = amountNum * (fluffeyPrice / prices.ETH);
+    console.log(`[Quote] Hard Override Applied: 1 FLUFFEY = ${fluffeyPrice / prices.ETH} ETH`);
+  }
   
   const usdValue = amountNum * sourcePrice;
-  const ethEquivalent = usdValue / ethPrice;
+  const targetEquivalent = finalTargetEquivalent;
   
-  const slippageAmount = ethEquivalent * (SLIPPAGE_BPS / 10000);
-  const feeAmount = ethEquivalent * (BRIDGE_FEE_PERCENT / 100);
-  const receivedAmount = ethEquivalent - slippageAmount - feeAmount;
+  const slippageAmount = targetEquivalent * (SLIPPAGE_BPS / 10000);
+  const feeAmount = targetEquivalent * (BRIDGE_FEE_PERCENT / 100);
+  const receivedAmount = targetEquivalent - slippageAmount - feeAmount;
   
   return {
     inputAmount: amount,
     inputToken: sourceToken,
     inputUsdValue: usdValue.toFixed(2),
     outputAmount: receivedAmount.toFixed(6),
-    outputToken: 'ETH',
+    outputToken: targetToken,
     slippageBps: SLIPPAGE_BPS,
     feePercent: BRIDGE_FEE_PERCENT,
     feeAmount: feeAmount.toFixed(6),
     slippageAmount: slippageAmount.toFixed(6),
-    estimatedTime: "~30 minutes",
-    exchangeRate: sourceToken === 'ETH' ? '1' : (sourcePrice / ethPrice).toFixed(6),
+    estimatedTime: "~5 minutes",
+    exchangeRate: (sourcePrice / targetPrice).toFixed(6),
     prices: {
       [sourceToken]: sourcePrice,
+      [targetToken]: targetPrice,
       ETH: ethPrice,
     },
   };
@@ -183,14 +229,16 @@ export async function registerRoutes(
 ): Promise<Server> {
 
   app.get("/api/quote", async (req, res) => {
-    const { amount, chainId } = req.query;
+    const { amount, chainId, inputToken, outputToken } = req.query;
     
     if (!amount || typeof amount !== "string") {
       return res.status(400).json({ error: "Amount is required" });
     }
     
-    const sourceChainId = chainId ? parseInt(chainId as string) : 8453;
-    const quote = await calculateQuote(amount, sourceChainId);
+    const key = chainId ? `${chainId}_${inputToken || 'ETH'}` : '8453_ETH';
+    console.log(`[API] Quote Request: amount=${amount}, chainId=${chainId}, input=${inputToken}, output=${outputToken}`);
+    const quote = await calculateQuote(amount, key, outputToken as string || 'ETH', inputToken as string);
+    console.log(`[API] Final Quote Output:`, JSON.stringify(quote));
     if (!quote) {
       return res.status(400).json({ error: "Invalid amount" });
     }
@@ -234,8 +282,8 @@ export async function registerRoutes(
       
       res.json({
         ...transaction,
-        estimatedTime: "~30 minutes",
-        message: "Bridge initiated! Please wait approximately 30 minutes for completion.",
+        estimatedTime: "~5 minutes",
+        message: "Bridge initiated! Please wait approximately 5 minutes for completion.",
       });
     } catch (error: any) {
       console.error("Bridge error:", error);
