@@ -644,7 +644,7 @@ export default function Home() {
                       <Clock className="w-3 h-3" />
                       Estimated Time
                     </span>
-                    <span>{quote.estimatedTime}</span>
+                    <span>~5 minutes</span>
                   </div>
                 </div>
               )}
