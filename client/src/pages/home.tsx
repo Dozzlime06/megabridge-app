@@ -277,7 +277,7 @@ export default function Home() {
         
         toast({
           title: "Bridge Initiated!",
-          description: "Your deposit was successful. Wait ~30 minutes for funds on MegaETH.",
+          description: "Your deposit was successful. Wait ~5 minutes for funds on MegaETH.",
         });
 
         await fetch("/api/bridge", {
@@ -331,7 +331,7 @@ export default function Home() {
         
         toast({
           title: "Bridge Out Initiated!",
-          description: "Your withdrawal was successful. Wait ~30 minutes for funds on Base.",
+          description: "Your withdrawal was successful. Wait ~5 minutes for funds on Base.",
         });
 
         await fetch("/api/bridge", {
