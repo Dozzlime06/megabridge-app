@@ -58,6 +58,7 @@ export default function Home() {
   const [quote, setQuote] = useState<Quote | null>(null);
   const [sourceBalance, setSourceBalance] = useState("0");
   const [megaBalance, setMegaBalance] = useState("0");
+  const [megaTokenBalances, setMegaTokenBalances] = useState<Record<string, string>>({});
   const [isBridgeIn, setIsBridgeIn] = useState(true);
   const [copied, setCopied] = useState(false);
   const [selectedChain, setSelectedChain] = useState<ChainConfig>(SUPPORTED_CHAINS[0]);
@@ -137,7 +138,7 @@ export default function Home() {
         setSourceBalance("0");
       }
 
-      // Fetch MegaETH balance
+      // Fetch MegaETH ETH balance
       try {
         const megaRes = await fetch(MEGAETH_CONFIG.rpcUrl, {
           method: "POST",
@@ -156,6 +157,44 @@ export default function Home() {
       } catch (err) {
         console.error("Failed to fetch MegaETH balance:", err);
       }
+
+      // Fetch MegaETH token balances (FLUFFEY, MEKA, KUMA)
+      const tokenBalances: Record<string, string> = {};
+      const maniaTokens = MEGAETH_TOKENS.filter(t => t.tag === "mania.fun" && t.address);
+      
+      for (const token of maniaTokens) {
+        try {
+          // ERC20 balanceOf(address) = 0x70a08231 + padded address
+          const paddedAddress = activeWallet.address.slice(2).padStart(64, '0');
+          const data = `0x70a08231${paddedAddress}`;
+          
+          const tokenRes = await fetch(MEGAETH_CONFIG.rpcUrl, {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({
+              jsonrpc: "2.0",
+              method: "eth_call",
+              params: [{ to: token.address, data }, "latest"],
+              id: 1,
+            }),
+          });
+          const tokenData = await tokenRes.json();
+          if (tokenData.result && tokenData.result !== "0x") {
+            const balance = parseInt(tokenData.result, 16) / (10 ** token.decimals);
+            tokenBalances[token.symbol] = balance > 1000000 
+              ? (balance / 1000000).toFixed(2) + "M" 
+              : balance > 1000 
+                ? (balance / 1000).toFixed(2) + "K"
+                : balance.toFixed(2);
+          } else {
+            tokenBalances[token.symbol] = "0";
+          }
+        } catch (err) {
+          console.error(`Failed to fetch ${token.symbol} balance:`, err);
+          tokenBalances[token.symbol] = "0";
+        }
+      }
+      setMegaTokenBalances(tokenBalances);
     };
 
     if (authenticated && activeWallet) {
@@ -488,9 +527,16 @@ export default function Home() {
               <div className="bg-primary/10 border border-primary/20 rounded-lg p-3">
                 <div className="flex items-center gap-2 mb-1">
                   <MegaETHLogoSimple className="w-4 h-4" />
-                  <span className="text-xs font-tech text-primary uppercase">MegaETH</span>
+                  <span className="text-xs font-tech text-primary uppercase">MegaETH Balances</span>
                 </div>
-                <div className="text-lg font-bold text-white" data-testid="text-mega-balance">{megaBalance} ETH</div>
+                <div className="text-sm font-bold text-white" data-testid="text-mega-balance">{megaBalance} ETH</div>
+                <div className="flex flex-wrap gap-2 mt-1">
+                  {Object.entries(megaTokenBalances).map(([symbol, balance]) => (
+                    <span key={symbol} className="text-xs text-primary/80 bg-primary/10 px-2 py-0.5 rounded">
+                      {balance} {symbol}
+                    </span>
+                  ))}
+                </div>
               </div>
             </div>
           )}
