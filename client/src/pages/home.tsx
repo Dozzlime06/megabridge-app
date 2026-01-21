@@ -154,7 +154,13 @@ export default function Home() {
 
     const fetchQuote = async () => {
       try {
-        const res = await fetch(`/api/quote?amount=${amount}&chainId=${selectedChain.id}&inputToken=${inputToken.symbol}&outputToken=${outputToken.symbol}`);
+        const queryParams = new URLSearchParams({
+          amount,
+          chainId: selectedChain.id.toString(),
+          inputToken: inputToken.symbol,
+          outputToken: outputToken.symbol
+        });
+        const res = await fetch(`/api/quote?${queryParams.toString()}`);
         if (res.ok) {
           const data = await res.json();
           setQuote(data);
