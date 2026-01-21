@@ -219,8 +219,8 @@ async function calculateQuote(amount: string, key: string = '8453_ETH', targetTo
     exchangeRate: (sourcePrice / targetPrice).toFixed(6),
     prices: {
       [sourceToken]: sourcePrice,
-      [targetToken]: targetPrice,
-      ETH: ethPrice,
+      [targetTokenFinal]: targetPrice,
+      ETH: prices.ETH || 3500,
     },
   };
 }
