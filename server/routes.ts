@@ -21,15 +21,20 @@ const TOKEN_DECIMALS: Record<string, number> = {
   FLUFFEY: 18,
   MEKA: 18,
   KUMA: 18,
+  SIGMA: 18,
 };
 
-// Mania.fun token addresses on MegaETH mainnet
-const MANIA_TOKENS: Record<string, string> = {
+// MegaETH token addresses (for Codex API)
+const MEGAETH_TOKENS: Record<string, string> = {
   FLUFFEY: '0xc5808cf8be4e4ce012aa65bf6f60e24a3cc82071',
   MEKA: '0x238214f6026601d5136ed88b5905e909ba06997b',
   KUMA: '0xd34f85ba2a331514666f3040f43d83306c7a85df',
   SIGMA: '0x023bb18826845645b121c5dfb65d23e834158491',
 };
+
+// Codex API for MegaETH token prices
+const CODEX_API_URL = 'https://graph.codex.io/graphql';
+const MEGAETH_NETWORK_ID = 4326;
 
 const CHAIN_TOKEN: Record<string, string> = {
   '8453': 'ETH',
@@ -105,28 +110,45 @@ async function fetchPrices(): Promise<Record<string, number>> {
     console.log('Failed to fetch prices from CoinGecko:', e);
   }
 
-  // Fetch mania.fun token prices from their API (real-time)
-  for (const [symbol, address] of Object.entries(MANIA_TOKENS)) {
-    try {
-      const res = await fetch(
-        `https://mania.fun/api/token/${address}`,
-        { 
-          headers: { 'Accept': 'application/json' },
-          signal: AbortSignal.timeout(5000)
-        }
-      );
+  // Fetch MegaETH token prices from Codex API (real-time)
+  try {
+    const codexApiKey = process.env.CODEX_API_KEY;
+    if (codexApiKey) {
+      const tokenInputs = Object.entries(MEGAETH_TOKENS).map(([_, address]) => 
+        `{address: "${address}", networkId: ${MEGAETH_NETWORK_ID}}`
+      ).join(', ');
+      
+      const query = `{ getTokenPrices(inputs: [${tokenInputs}]) { address priceUsd } }`;
+      
+      const res = await fetch(CODEX_API_URL, {
+        method: 'POST',
+        headers: {
+          'Authorization': codexApiKey,
+          'Content-Type': 'application/json'
+        },
+        body: JSON.stringify({ query }),
+        signal: AbortSignal.timeout(5000)
+      });
+      
       if (res.ok) {
         const data = await res.json();
-        if (data.success && data.data?.currentPrice) {
-          prices[symbol] = data.data.currentPrice;
-          const priceInEth = data.data.currentPriceETH || 0;
-          const tokensPerEth = priceInEth > 0 ? (1 / priceInEth).toFixed(0) : 'N/A';
-          console.log(`[Prices] ${symbol}: $${prices[symbol].toFixed(8)} (mania.fun: 1 ETH = ${tokensPerEth} ${symbol})`);
+        const tokenPrices = data.data?.getTokenPrices || [];
+        
+        for (const [symbol, address] of Object.entries(MEGAETH_TOKENS)) {
+          const tokenPrice = tokenPrices.find((t: any) => t?.address?.toLowerCase() === address.toLowerCase());
+          if (tokenPrice?.priceUsd) {
+            prices[symbol] = tokenPrice.priceUsd;
+            const ethPrice = prices.ETH || 3000;
+            const tokensPerEth = (ethPrice / tokenPrice.priceUsd).toFixed(0);
+            console.log(`[Prices] ${symbol}: $${tokenPrice.priceUsd.toFixed(8)} (Codex: 1 ETH = ${tokensPerEth} ${symbol})`);
+          }
         }
       }
-    } catch (e) {
-      console.log(`[Prices] Failed to fetch ${symbol} from mania.fun:`, e);
+    } else {
+      console.log('[Prices] CODEX_API_KEY not set, skipping Codex API');
     }
+  } catch (e) {
+    console.log('[Prices] Failed to fetch from Codex API:', e);
   }
   
   // Fetch HYPE price from CoinGecko (real-time)
