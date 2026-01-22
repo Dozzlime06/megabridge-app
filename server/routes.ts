@@ -28,6 +28,7 @@ const MANIA_TOKENS: Record<string, string> = {
   FLUFFEY: '0xc5808cf8be4e4ce012aa65bf6f60e24a3cc82071',
   MEKA: '0x238214f6026601d5136ed88b5905e909ba06997b',
   KUMA: '0xd34f85ba2a331514666f3040f43d83306c7a85df',
+  SIGMA: '0x023bb18826845645b121c5dfb65d23e834158491',
 };
 
 const CHAIN_TOKEN: Record<string, string> = {
@@ -169,6 +170,9 @@ async function fetchPrices(): Promise<Record<string, number>> {
   }
   if (!prices.KUMA || prices.KUMA <= 0) {
     prices.KUMA = 0.000015;
+  }
+  if (!prices.SIGMA || prices.SIGMA <= 0) {
+    prices.SIGMA = 0.00001; // Fallback - no mania.fun API available
   }
   
   priceCache = { prices, timestamp: Date.now() };

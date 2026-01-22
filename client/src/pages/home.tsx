@@ -27,6 +27,7 @@ const MEGAETH_TOKENS: TokenInfo[] = [
   { symbol: "FLUFFEY", name: "Fluffey", address: "0xc5808cf8be4e4ce012aa65bf6f60e24a3cc82071", tag: "mania.fun", decimals: 18 },
   { symbol: "MEKA", name: "meka", address: "0x238214f6026601d5136ed88b5905e909ba06997b", tag: "mania.fun", decimals: 18 },
   { symbol: "KUMA", name: "Kuma", address: "0xd34f85ba2a331514666f3040f43d83306c7a85df", tag: "mania.fun", decimals: 18 },
+  { symbol: "SIGMA", name: "Sigma Bunny", address: "0x023bb18826845645b121c5dfb65d23e834158491", tag: "mania.fun", decimals: 18 },
 ];
 
 interface Quote {
